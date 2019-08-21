@@ -1,0 +1,5 @@
+add_subdirectory( utils )
+add_subdirectory( primitives )
+add_executable( TestBitmappedVectorTrie test_bitmapped_vector_trie.cpp )
+target_link_libraries( TestBitmappedVectorTrie gtest gmock gtest_main TCCDataStructure )
+gtest_discover_tests( TestBitmappedVectorTrie COMMAND TestBitmappedVectorTrie )
