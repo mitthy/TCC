@@ -21,10 +21,18 @@ target_sources( TCCMetaProgramming INTERFACE ${TCC_META_HEADER_FILES} )
 target_include_directories( TCCMetaProgramming INTERFACE include/ )
 target_compile_features( TCCMetaProgramming INTERFACE cxx_std_17 )
 
+add_library( TCCMemory INTERFACE )
+set( TCC_MEMORY_HEADER_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/reference_count.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator/allocator_base.hpp
+)
+target_sources( TCCMemory INTERFACE ${TCC_MEMORY_HEADER_FILES} )
+target_include_directories( TCCMemory INTERFACE include/ )
+target_compile_features( TCCMemory INTERFACE cxx_std_17 )
+
 add_library( TCCFunctional INTERFACE )
 set( TCC_FUNCTIONAL_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/functional/optional.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/functional/traits.hpp
 )
 target_sources( TCCFunctional INTERFACE ${TCC_FUNCTIONAL_HEADER_FILES} )
 target_include_directories( TCCFunctional INTERFACE include/ )
