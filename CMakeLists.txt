@@ -42,6 +42,7 @@ target_link_libraries( TCCFunctional INTERFACE TCCMetaProgramming )
 add_library( TCCDataStructure INTERFACE )
 set( TCC_DATA_STRUCTURE_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/utils/log.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/utils/mean.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/functional_bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/kd_tree.hpp
