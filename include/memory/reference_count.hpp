@@ -11,7 +11,7 @@ namespace tcc {
 
   namespace memory {
 
-    template< typename T, typename Traits >
+    template< typename T >
     struct reference_count {
 
       reference_count( allocator_base* alloc = &malloc_allocator ) {

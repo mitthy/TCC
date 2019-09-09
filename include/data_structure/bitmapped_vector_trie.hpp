@@ -6,7 +6,6 @@
 
 //C++ stdlib includes
 #include <type_traits>
-#include <bitset>
 
 //Project includes
 #include "utils/log.h"

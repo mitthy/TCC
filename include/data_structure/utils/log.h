@@ -22,11 +22,11 @@ namespace tcc {
         return result;
       }
 
-    }
+    }  //namespace utils
 
-  }
+  }  //namespace data_structure
 
-}
+}  //namespace tcc
 
 
 
