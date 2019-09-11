@@ -8,7 +8,7 @@
 #include <type_traits>
 
 //Project includes
-#include "utils/log.h"
+#include "algorithm/internal/log.h"
 #include "primitives/static_vector.hpp"
 #include "memory/allocator/allocator_base.hpp"
 #include "functional/optional.hpp"

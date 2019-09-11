@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/utils/log.h"
+#include "algorithm/internal/log.h"
 
 TEST( TestLog, TestZero ) {
   EXPECT_EQ( tcc::data_structure::utils::log2( 0 ), -1 );

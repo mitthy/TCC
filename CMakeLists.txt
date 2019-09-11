@@ -39,10 +39,20 @@ target_include_directories( TCCFunctional INTERFACE include/ )
 target_compile_features( TCCFunctional INTERFACE cxx_std_17 )
 target_link_libraries( TCCFunctional INTERFACE TCCMetaProgramming )
 
+add_library( TCCAlgorithm INTERFACE )
+set( TCC_ALGORITHM_HEADER_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/distance.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/mean.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/log.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/partition.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/algorithm.hpp
+)
+target_sources( TCCAlgorithm INTERFACE ${TCC_ALGORITHM_HEADER_FILES} )
+target_include_directories( TCCAlgorithm INTERFACE include/ )
+target_compile_features( TCCAlgorithm INTERFACE cxx_std_17 )
+
 add_library( TCCDataStructure INTERFACE )
 set( TCC_DATA_STRUCTURE_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/utils/log.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/utils/mean.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/functional_bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/kd_tree.hpp
@@ -51,6 +61,7 @@ set( TCC_DATA_STRUCTURE_HEADER_FILES
 target_sources( TCCDataStructure INTERFACE ${TCC_DATA_STRUCTURE_HEADER_FILES} )
 target_include_directories( TCCDataStructure INTERFACE include/ )
 target_compile_features( TCCDataStructure INTERFACE cxx_std_17 )
+target_link_libraries( TCCDataStructure INTERFACE TCCAlgorithm TCCMetaProgramming TCCFunctional )
 
 option(BUILD_TCC_TESTS "Build tests for thesis" OFF)
 if(${BUILD_TCC_TESTS} OR (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))

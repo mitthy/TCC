@@ -1,4 +1,3 @@
-add_subdirectory( utils )
 add_subdirectory( primitives )
 add_subdirectory( multidimensional )
 add_executable( TestBitmappedVectorTrie test_bitmapped_vector_trie.cpp )
