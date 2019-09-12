@@ -3,6 +3,26 @@ project( TCC VERSION 0.0.0
             DESCRIPTION "Advanced data structures library I'm creating for my undergraduate thesis."
           LANGUAGES CXX )
 
+#Got this idea from EnTT project...
+
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the source code and call cmake from there. Thank you.")
+endif()
+
+if( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE Debug )
+endif()
+
+option( BUILD_TCC_DOCS "Enable building with documentation." ON )
+
+if( BUILD_TCC_DOCS )
+    find_package( Doxygen 1.8 )
+
+    if( DOXYGEN_FOUND )
+        add_subdirectory( docs )
+    endif()
+endif()
+
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 
 include( CTest )
@@ -64,7 +84,7 @@ target_include_directories( TCCDataStructure INTERFACE include/ )
 target_compile_features( TCCDataStructure INTERFACE cxx_std_17 )
 target_link_libraries( TCCDataStructure INTERFACE TCCAlgorithm TCCMetaProgramming TCCFunctional )
 
-option(BUILD_TCC_TESTS "Build tests for thesis" OFF)
+option( BUILD_TCC_TESTS "Build tests for thesis" OFF )
 if(${BUILD_TCC_TESTS} OR (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
   enable_testing()
   add_definitions(-DTEST_ENABLED)
