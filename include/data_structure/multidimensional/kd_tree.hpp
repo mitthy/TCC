@@ -201,11 +201,9 @@ namespace tcc {
 
         using child_t = node< NodeDimension + 1 == Dimensions ? 0 : NodeDimension + 1 >;
 
-        node( void* storage ): m_storage( storage ), m_left( nullptr ), m_right( nullptr ) {}
+        node( ): m_left( nullptr ), m_right( nullptr ) {}
 
-        node( void* storage, child_t* left, child_t* right ): m_storage( storage ), m_left( left ), m_right( right ) {}
-
-        void* m_storage;
+        node( child_t* left, child_t* right ): m_left( left ), m_right( right ) {}
 
         child_t* m_left;
 
@@ -222,7 +220,7 @@ namespace tcc {
           std::aligned_storage_t<sizeof( actual_t ), alignof( actual_t )> m_storage;
         };
         alloc_type* raw_memory = static_cast<alloc_type*>( m_allocator->allocate( sizeof( alloc_type ), alignof( alloc_type ) ) );
-        new ( &raw_memory->m_node ) node<NodeDimension>{ static_cast<void*>( &raw_memory->m_storage ), std::forward<Args>( args )... };
+        new ( &raw_memory->m_node ) node<NodeDimension>{ std::forward<Args>( args )... };
         new ( &raw_memory->m_storage ) actual_t{ std::forward<Type>( object ) };
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
       }
@@ -246,11 +244,11 @@ namespace tcc {
       __remove_node__( node<NodeDimension>* to_delete ) {
         using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<NodeDimension>>() ) )>;
         if( !to_delete->m_left && !to_delete->m_right ) {
-          T* leaf = static_cast<T*>( to_delete->m_storage );
+          T* leaf = __get_element__<T>( to_delete );
           leaf->~T();
         }
         else {
-          maybe_actual_t* middle = static_cast<maybe_actual_t*>( to_delete->m_storage );
+          maybe_actual_t* middle = __get_element__<maybe_actual_t>( to_delete );
           middle->~maybe_actual_t();
           if( to_delete->m_left ) {
             __remove_node__( to_delete->m_left );
@@ -292,14 +290,15 @@ namespace tcc {
         using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           //Leaf case. Check if the current node is a better match.
-          auto calculated_distance = f( value, *reinterpret_cast<T*>( node->m_storage ) );
+          T* stored = __get_element__<T>( node );
+          auto calculated_distance = f( value, *stored );
           if( calculated_distance < best_distance ) {
-            *best = reinterpret_cast<T*>( node->m_storage );
+            *best = stored;
             best_distance = calculated_distance;
           }
         }
         else {
-          maybe_actual_t& stored_value = *reinterpret_cast<maybe_actual_t*>( node->m_storage );
+          maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
           if( m_compare( Traits::get( value, dimension_t<I>{} ), stored_value ) ) {
             nearest_neighbour_impl( value, node->m_left, best, best_distance, f );
             if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
@@ -313,6 +312,17 @@ namespace tcc {
             }
           }
         }
+      }
+
+      template< typename StoredType, int NodeDimension >
+      static StoredType*
+      __get_element__( node<NodeDimension>* ptr ) {
+        struct retrieve_struct {
+          std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
+          std::aligned_storage_t<sizeof( StoredType ), alignof( StoredType )> m_actual;
+        }; //We declare this struct to make the compiler do the dirty work for us
+        retrieve_struct* retriever = reinterpret_cast<retrieve_struct*>( ptr );
+        return reinterpret_cast<StoredType*>( &retriever->m_actual );
       }
 
     public:
