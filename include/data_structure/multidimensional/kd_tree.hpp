@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 
 //Project includes
 #include "memory/allocator/allocator_base.hpp"
@@ -25,7 +26,7 @@ namespace tcc {
 
     namespace __detail__ {
 
-      template< typename Underlying, size_t Dimension, typename Traits >
+      template< typename Underlying, int Dimension, typename Traits >
       struct dimensional_iterator {
 
       private:
@@ -116,6 +117,9 @@ namespace tcc {
     }
 
     template< typename T >
+    struct numeric_limits : std::numeric_limits< T > {};
+
+    template< typename T >
     struct dimensional_traits;
 
     template< typename... Types >
@@ -124,13 +128,9 @@ namespace tcc {
       static constexpr int dimensions = sizeof...( Types );
 
       template< int Index, typename U = std::tuple<Types...> >
-      static auto get( U&& object, dimension_t<Index> ) {
+      static auto
+      get( U&& object, dimension_t<Index> ) {
         return std::get<Index>( std::forward<U>( object ) );
-      }
-
-      template< typename... Types >
-      auto distance( const std::tuple<Types...>& lhs, const std::tuple<Types...>& rhs ) {
-        //TODO
       }
 
       template< int I >
@@ -141,7 +141,7 @@ namespace tcc {
     struct mean_split_function {
 
       template< typename Iterator, typename Sentinel >
-      auto operator()( Iterator first, Sentinel last )  {
+      auto operator()( Iterator first, Sentinel last ) const {
         algorithm::mean< typename std::iterator_traits<Iterator>::value_type > mean_calculator{};
         return mean_calculator( first, last );
       }
@@ -151,7 +151,7 @@ namespace tcc {
     struct less_compare_function {
 
       template< typename T, typename U >
-      bool operator()( const T& element, const U& split_value ) {
+      bool operator()( const T& element, const U& split_value ) const {
         return element < split_value;
       }
 
@@ -159,14 +159,30 @@ namespace tcc {
 
     template< typename Traits >
     struct default_nearest_neighbour_function {
-      template< typename T, typename U, size_t Index >
-      auto operator()( const T& element, const U& stored, const dimension_t<Index> ) {
-        return Traits::get( element, dimension_t<Index>{} ) - stored;
+
+      struct element_distance {
+        template< typename T >
+        size_t operator()( const T& lhs, const T& rhs ) const {
+          auto tmp = algorithm::absolute_difference( lhs, rhs );
+          return tmp * tmp;
+        }
+      };
+
+      template< typename T, typename U, int Index >
+      auto operator()( const T& element, const U& stored, const dimension_t<Index> ) const {
+        element_distance functor;
+        return functor( Traits::get( element, dimension_t<Index>{} ), stored );
+      }
+
+      template< size_t... Index >
+      auto distance_impl( const auto& lhs, const auto& rhs, std::index_sequence<Index...> ) const {
+        element_distance functor;
+        return (functor( Traits::get( lhs, dimension_t<Index>{} ), Traits::get( rhs, dimension_t<Index>{} ) ) + ... );
       }
 
       template< typename T >
-      auto operator()( const T& lhs, const T& rhs ) {
-        return Traits::distance( lhs, rhs );
+      auto operator()( const T& lhs, const T& rhs ) const {
+        return distance_impl( lhs, rhs, std::make_index_sequence<Traits::dimensions>{} );
       }
     };
 
@@ -178,7 +194,7 @@ namespace tcc {
 
       static_assert( Dimensions > 0 );
 
-      template< size_t NodeDimension >
+      template< int NodeDimension >
       struct node {
 
         friend class kd_tree;
@@ -197,7 +213,7 @@ namespace tcc {
 
       };
 
-      template< size_t NodeDimension, typename Type, typename... Args >
+      template< int NodeDimension, typename Type, typename... Args >
       node<NodeDimension>*
       create_node( Type&& object, Args&&... args ) {
         using actual_t = std::decay_t<Type>;
@@ -209,9 +225,9 @@ namespace tcc {
         new ( &raw_memory->m_node ) node<NodeDimension>{ static_cast<void*>( &raw_memory->m_storage ), std::forward<Args>( args )... };
         new ( &raw_memory->m_storage ) actual_t{ std::forward<Type>( object ) };
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
-      };
+      }
 
-      template< size_t I, typename U >
+      template< int I, typename U >
       static auto
       __get__( U&& el ) {
         return Traits::get( std::forward<U>( el ), dimension_t<I>{} );
@@ -225,7 +241,7 @@ namespace tcc {
 
       node<0>* m_head;
 
-      template< size_t NodeDimension >
+      template< int NodeDimension >
       void
       __remove_node__( node<NodeDimension>* to_delete ) {
         using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<NodeDimension>>() ) )>;
@@ -246,7 +262,7 @@ namespace tcc {
         m_allocator->deallocate( static_cast<void*>( to_delete ) );
       }
 
-      template< size_t Dimension, typename InputIterator, typename Sentinel >
+      template< int Dimension, typename InputIterator, typename Sentinel >
       node<Dimension>*
       create_kd_tree( InputIterator first, Sentinel last ) {
         if( algorithm::distance( first, last ) == 1 ) {
@@ -261,9 +277,41 @@ namespace tcc {
             return temp_function( element, split );
           };
           auto middle = tcc::algorithm::partition( begin, end, partition_function ).base();
+          if( first == middle ) {
+            middle = std::next( middle );
+          }
           auto* left = create_kd_tree<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( first, middle );
           auto* right = create_kd_tree<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( middle, last );
           return create_node<Dimension>( split, left, right );
+        }
+      }
+
+      template< int I, typename DistanceFunction >
+      void
+      nearest_neighbour_impl( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const {
+        using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        if( !node->m_left && !node->m_right ) {
+          //Leaf case. Check if the current node is a better match.
+          auto calculated_distance = f( value, *reinterpret_cast<T*>( node->m_storage ) );
+          if( calculated_distance < best_distance ) {
+            *best = reinterpret_cast<T*>( node->m_storage );
+            best_distance = calculated_distance;
+          }
+        }
+        else {
+          maybe_actual_t& stored_value = *reinterpret_cast<maybe_actual_t*>( node->m_storage );
+          if( m_compare( Traits::get( value, dimension_t<I>{} ), stored_value ) ) {
+            nearest_neighbour_impl( value, node->m_left, best, best_distance, f );
+            if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+              nearest_neighbour_impl( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
+            }
+          }
+          else {
+            nearest_neighbour_impl( value, node->m_right, best, best_distance, f );
+            if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+              nearest_neighbour_impl( value, node->m_left, best, best_distance, f ); //There might be a better candidate on the other side.
+            }
+          }
         }
       }
 
@@ -282,9 +330,12 @@ namespace tcc {
       }
 
       template< typename DistanceFunction = default_nearest_neighbour_function<Traits> >
-      T nearest_neighbour( const T& point, DistanceFunction f = DistanceFunction{} ) const {
-        //TODO
-        return T{};
+      auto nearest_neighbour( const T& point, DistanceFunction f = DistanceFunction{} ) const -> std::pair<T, std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>> {
+        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
+        T* ret = nullptr;
+        auto best_distance = numeric_limits<distance_t>::max();
+        nearest_neighbour_impl( point, m_head, &ret, best_distance, f );
+        return std::make_pair( *ret, best_distance );
       }
 
     };

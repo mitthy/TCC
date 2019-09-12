@@ -45,6 +45,7 @@ set( TCC_ALGORITHM_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/mean.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/partition.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/internal/absolute_difference.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/algorithm.hpp
 )
 target_sources( TCCAlgorithm INTERFACE ${TCC_ALGORITHM_HEADER_FILES} )

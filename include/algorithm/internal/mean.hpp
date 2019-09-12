@@ -18,7 +18,7 @@ namespace tcc {
     struct add {
 
       template< typename T >
-      auto operator()( const T& first, const T& second ) {
+      auto operator()( const T& first, const T& second ) const {
         return first + second;
       }
 
@@ -32,7 +32,7 @@ namespace tcc {
       mean( AddFunction function = AddFunction{} ): m_function( function ) {}
 
       template< typename Iterator, typename Sentinel >
-      T operator()( Iterator first, Sentinel last ) {
+      T operator()( Iterator first, Sentinel last ) const {
         auto size = distance( first, last );
         auto init = mean_traits<T>::zero();
         init = std::accumulate( first, last, std::move( init ), m_function );
