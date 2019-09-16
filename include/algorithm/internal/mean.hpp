@@ -17,8 +17,8 @@ namespace tcc {
 
     struct add {
 
-      template< typename T >
-      auto operator()( const T& first, const T& second ) const {
+      template< typename T, typename U >
+      auto operator()( const T& first, const U& second ) const {
         return first + second;
       }
 
