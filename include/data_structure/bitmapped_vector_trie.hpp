@@ -8,9 +8,9 @@
 #include <type_traits>
 
 //Project includes
-#include "algorithm/internal/log.h"
+#include "algorithm/log.h"
 #include "primitives/static_vector.hpp"
-#include "memory/allocator/allocator_base.hpp"
+#include "memory/allocator/malloc_allocator.hpp"
 #include "functional/optional.hpp"
 
 namespace tcc {
@@ -21,7 +21,7 @@ namespace tcc {
     struct OptionalPolicy {
     };
 
-    template< typename T, size_t NodeSize = 32, typename Policy = OptionalPolicy<T, NodeSize> >
+    template< typename T, size_t NodeSize = 32, typename Policy = OptionalPolicy<T, NodeSize>, typename Allocator = tcc::memory::malloc_allocator_t >
     struct bitmapped_vector_trie {
 
       //Size must be a power of 2 so that we can efficiently calculate the index.
@@ -42,8 +42,6 @@ namespace tcc {
         unsafe_static_vector< node, NodeSize >* m_tree;
       };
 
-      tcc::memory::allocator_base* m_allocator;
-
       node m_root;
 
       //We use the rank as how many steps we want the incoming value to take before masking it out.
@@ -54,11 +52,13 @@ namespace tcc {
 
       size_t m_size;
 
+      Allocator* m_allocator;
+
       static node
-      create_leaf_node( tcc::memory::allocator_base& alloc ) {
+      create_leaf_node( Allocator& alloc ) {
         node ret{};
         using actual = unsafe_static_vector< T,NodeSize >;
-        void* memory = alloc.allocate( sizeof( actual ), alignof( actual ) );
+        void* memory = allocate( alloc, sizeof( actual ), alignof( actual ) );
         actual* ptr = static_cast<actual*>( memory );
         new ( ptr ) actual {};
         ret.m_leaf = ptr;
@@ -110,7 +110,7 @@ namespace tcc {
             if( !prev ) {
               //If we're full and there's no one before us...
               node new_root{};
-              void* raw_memory = m_allocator->allocate( sizeof( unsafe_static_vector<node, NodeSize> ), alignof( unsafe_static_vector<node, NodeSize> ) );
+              void* raw_memory = allocate( *m_allocator, sizeof( unsafe_static_vector<node, NodeSize> ), alignof( unsafe_static_vector<node, NodeSize> ) );
               new ( raw_memory ) unsafe_static_vector< node, NodeSize > {};
               new_root.m_tree = static_cast< unsafe_static_vector< node, NodeSize >* >( raw_memory );
               new_root.m_tree->push_back( *cur );
@@ -131,7 +131,7 @@ namespace tcc {
 
     public:
 
-      bitmapped_vector_trie( tcc::memory::allocator_base* alloc = &tcc::memory::malloc_allocator ):
+      bitmapped_vector_trie( Allocator* alloc = &memory::malloc_allocator ):
                             m_allocator( alloc ), m_root( create_leaf_node( *alloc ) ), m_base_mask( Mask ), m_rank( 0 ), m_size( 0 ) {}
 
       void

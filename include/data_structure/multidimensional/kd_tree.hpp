@@ -13,9 +13,11 @@
 #include <limits>
 
 //Project includes
-#include "memory/allocator/allocator_base.hpp"
+#include "memory/allocator/malloc_allocator.hpp"
 #include "meta/utils.hpp"
-#include "algorithm/algorithm.hpp"
+#include "algorithm/absolute_difference.hpp"
+#include "algorithm/mean.hpp"
+#include "algorithm/partition.hpp"
 
 namespace tcc {
 
@@ -191,10 +193,15 @@ namespace tcc {
       }
     };
 
-    template< typename T, typename SplitFunction = mean_split_function, typename CompareFunction = less_compare_function, typename Traits = dimensional_traits<T> >
+    template< typename T,
+              typename SplitFunction = mean_split_function,
+              typename CompareFunction = less_compare_function,
+              typename Allocator = tcc::memory::malloc_allocator_t >
     struct kd_tree {
 
       static_assert( std::is_same_v<T, std::decay_t<T>>, "Can only create kd_tree of a value type." );
+
+      using Traits = dimensional_traits<T>;
 
     private:
       static constexpr int Dimensions = Traits::dimensions;
@@ -226,7 +233,7 @@ namespace tcc {
           std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
           std::aligned_storage_t<sizeof( actual_t ), alignof( actual_t )> m_storage;
         };
-        alloc_type* raw_memory = static_cast<alloc_type*>( m_allocator->allocate( sizeof( alloc_type ), alignof( alloc_type ) ) );
+        alloc_type* raw_memory = static_cast<alloc_type*>( allocate( *m_allocator, sizeof( alloc_type ), alignof( alloc_type ) ) );
         new ( &raw_memory->m_node ) node<NodeDimension>{ std::forward<Args>( args )... };
         new ( &raw_memory->m_storage ) actual_t{ std::forward<Type>( object ) };
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
@@ -238,7 +245,7 @@ namespace tcc {
         return Traits::get( std::forward<U>( el ), dimension_t<I>{} );
       }
 
-      memory::allocator_base* m_allocator;
+      Allocator* m_allocator;
 
       CompareFunction m_compare;
 
@@ -264,7 +271,7 @@ namespace tcc {
             __remove_node__( to_delete->m_right );
           }
         }
-        m_allocator->deallocate( static_cast<void*>( to_delete ) );
+        deallocate( *m_allocator, static_cast<void*>( to_delete ) );
       }
 
       template< int Dimension, typename InputIterator, typename Sentinel >
@@ -335,18 +342,34 @@ namespace tcc {
     public:
 
       template< typename InputIterator, typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last, memory::allocator_base* allocator = &memory::malloc_allocator ):
+      kd_tree( InputIterator first, Sentinel last, Allocator* allocator ):
             m_allocator( allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
-            }
+      }
 
       template< typename InputIterator, typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{}, memory::allocator_base* allocator = &memory::malloc_allocator ):
+      kd_tree( InputIterator first, Sentinel last ):
+            m_allocator( &memory::malloc_allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
+              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
+                                                                                    //Otherwise we would need a work around conversion.
+              static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
+      }
+
+      template< typename InputIterator, typename Sentinel >
+      kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split, Allocator* allocator ):
             m_allocator( allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
-            }
+      }
+
+      template< typename InputIterator, typename Sentinel >
+      kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{} ):
+            m_allocator( &memory::malloc_allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
+              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
+                                                                                    //Otherwise we would need a work around conversion.
+            static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
+      }
 
       ~kd_tree() {
         __remove_node__( m_head );

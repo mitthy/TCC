@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "algorithm/internal/absolute_difference.hpp"
+#include "algorithm/absolute_difference.hpp"
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>

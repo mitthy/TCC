@@ -5,16 +5,16 @@
 #include <stdint.h>
 
 //Project includes
-#include "allocator/allocator_base.hpp"
+#include "allocator.hpp"
 
 namespace tcc {
 
   namespace memory {
 
-    template< typename T >
+    template< typename T, typename Allocator = malloc_allocator_t >
     struct reference_count {
 
-      reference_count( allocator_base* alloc = &malloc_allocator ) {
+      reference_count( Allocator* alloc = &malloc_allocator ) {
 
       }
 

@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "data_structure/multidimensional/kd_tree.hpp"
+#include "memory/allocator.hpp"
 #include <vector>
 #include <tuple>
 
