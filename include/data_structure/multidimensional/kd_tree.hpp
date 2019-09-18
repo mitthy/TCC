@@ -11,10 +11,11 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include <vector>
 
 //Project includes
 #include "memory/allocator/malloc_allocator.hpp"
-#include "meta/utils.hpp"
+#include "meta/detect.hpp"
 #include "algorithm/absolute_difference.hpp"
 #include "algorithm/mean.hpp"
 #include "algorithm/partition.hpp"
@@ -28,7 +29,9 @@ namespace tcc {
 
     namespace __detail__ {
 
-      template< typename Underlying, int Dimension, typename Traits >
+      template< typename Underlying,
+                int Dimension,
+                typename Traits >
       struct dimensional_iterator {
 
       private:
@@ -115,6 +118,44 @@ namespace tcc {
         }
 
       };
+
+      template< typename T >
+      struct insert_tag;
+
+      struct push_back {};
+
+      struct insert {};
+
+      template< typename T >
+      using push_back_expr = decltype( std::declval<T>().push_back( std::declval<typename T::value_type>() ) );
+
+      template< typename T >
+      using insert_expr = decltype( std::declval<T>().insert( std::declval<typename T::value_type>() ) );
+
+      template< typename T >
+      constexpr bool has_push_back = meta::is_valid_expression_v<push_back_expr, T>;
+
+      template< typename T >
+      constexpr bool has_insert = meta::is_valid_expression_v<insert_expr, T>;
+
+      template< typename T >
+      constexpr bool always_false = false;
+
+      static_assert( has_push_back<std::vector<int>> );
+
+      template< typename T,
+                typename Container >
+      void add_element( T&& element, Container& cont ) {
+        if constexpr( has_push_back<Container> ) {
+          cont.push_back( std::forward<T>( element ) );
+        }
+        else if constexpr( has_insert<Container> ) {
+          cont.insert( std::forward<T>( element ) );
+        }
+        else {
+          static_assert( always_false<T> );
+        }
+      }
 
     }
 
@@ -225,7 +266,9 @@ namespace tcc {
 
       };
 
-      template< int NodeDimension, typename Type, typename... Args >
+      template< int NodeDimension,
+                typename Type,
+                typename... Args >
       node<NodeDimension>*
       create_node( Type&& object, Args&&... args ) {
         using actual_t = std::decay_t<Type>;
@@ -239,7 +282,8 @@ namespace tcc {
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
       }
 
-      template< int I, typename U >
+      template< int I,
+                typename U >
       static auto
       __get__( U&& el ) {
         return Traits::get( std::forward<U>( el ), dimension_t<I>{} );
@@ -260,6 +304,11 @@ namespace tcc {
         if( !to_delete->m_left && !to_delete->m_right ) {
           T* leaf = __get_element__<T>( to_delete );
           leaf->~T();
+          struct alloc_type_leaf {
+            std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
+            std::aligned_storage_t<sizeof( T ), alignof( T )> m_storage;
+          };
+          deallocate( *m_allocator, static_cast<void*>( to_delete ), alignof( alloc_type_leaf ) );
         }
         else {
           maybe_actual_t* middle = __get_element__<maybe_actual_t>( to_delete );
@@ -270,11 +319,17 @@ namespace tcc {
           if( to_delete->m_right ) {
             __remove_node__( to_delete->m_right );
           }
+          struct alloc_type_root {
+            std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
+            std::aligned_storage_t<sizeof( maybe_actual_t ), alignof( maybe_actual_t )> m_storage;
+          };
+          deallocate( *m_allocator, static_cast<void*>( to_delete ), alignof( alloc_type_root ) );
         }
-        deallocate( *m_allocator, static_cast<void*>( to_delete ) );
       }
 
-      template< int Dimension, typename InputIterator, typename Sentinel >
+      template< int Dimension,
+                typename InputIterator,
+                typename Sentinel >
       node<Dimension>*
       create_kd_tree( InputIterator first, Sentinel last ) {
         if( algorithm::distance( first, last ) == 1 ) {
@@ -298,7 +353,8 @@ namespace tcc {
         }
       }
 
-      template< int I, typename DistanceFunction >
+      template< int I,
+                typename DistanceFunction >
       void
       nearest_neighbor_impl( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const noexcept {
         using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
@@ -328,7 +384,46 @@ namespace tcc {
         }
       }
 
-      template< typename StoredType, int NodeDimension >
+      template< int I,
+                typename DistanceFunction >
+      void
+      k_nearest_neighbor_impl( const T& value, node<I>* node, int K, std::vector<std::pair<T*, size_t>>& max_heap,  DistanceFunction f ) const noexcept {
+        using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        struct heap_compare {
+          bool operator()( const std::pair<T*, size_t>& lhs, const std::pair<T*, size_t>& rhs ) const {
+            return lhs.second < rhs.second;
+          }
+        };
+        if( !node->m_left && !node->m_right ) {
+          T* stored = __get_element__<T>( node );
+          auto calculated_distance = f( value, *stored );
+          auto heap_element = std::make_pair( stored, calculated_distance );
+          max_heap.push_back( heap_element );
+          std::push_heap( max_heap.begin(), max_heap.end(), heap_compare{} );
+          if( max_heap.size() > K ) {
+            std::pop_heap( max_heap.begin(), max_heap.end(), heap_compare{} );
+            max_heap.pop_back();
+          }
+        }
+        else {
+          maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
+          if( m_compare( Traits::get( value, dimension_t<I>{} ), stored_value ) ) {
+            k_nearest_neighbor_impl( value, node->m_left, K, max_heap, f );
+            if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
+              k_nearest_neighbor_impl( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
+            }
+          }
+          else {
+            k_nearest_neighbor_impl( value, node->m_right, K, max_heap, f );
+            if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
+              k_nearest_neighbor_impl( value, node->m_left, K, max_heap, f ); //There might be a better candidate on the other side.
+            }
+          }
+        }
+      }
+
+      template< typename StoredType,
+                int NodeDimension >
       static StoredType*
       __get_element__( node<NodeDimension>* ptr ) noexcept {
         struct retrieve_struct {
@@ -341,14 +436,18 @@ namespace tcc {
 
     public:
 
-      template< typename InputIterator, typename Sentinel >
+      //Constructors
+
+      template< typename InputIterator,
+                typename Sentinel >
       kd_tree( InputIterator first, Sentinel last, Allocator* allocator ):
             m_allocator( allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
       }
 
-      template< typename InputIterator, typename Sentinel >
+      template< typename InputIterator,
+                typename Sentinel >
       kd_tree( InputIterator first, Sentinel last ):
             m_allocator( &memory::malloc_allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
@@ -356,20 +455,34 @@ namespace tcc {
               static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
       }
 
-      template< typename InputIterator, typename Sentinel >
+      template< typename InputIterator,
+                typename Sentinel >
       kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split, Allocator* allocator ):
             m_allocator( allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
       }
 
-      template< typename InputIterator, typename Sentinel >
+      template< typename InputIterator,
+                typename Sentinel >
       kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{} ):
             m_allocator( &memory::malloc_allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
             static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
       }
+
+      //Copy constructors
+
+      kd_tree( const kd_tree& rhs ) {
+        //TODO
+      }
+
+      kd_tree( kd_tree&& rhs ) {
+        //TODO
+      }
+
+      //Destructor
 
       ~kd_tree() {
         __remove_node__( m_head );
@@ -385,9 +498,16 @@ namespace tcc {
         return std::make_pair( *ret, best_distance );
       }
 
-      template< typename DistanceFunction = default_nearest_neighbour_function<Traits>, typename Collection >
-      Collection& k_nearest_neighbor( const T& point, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
-        //TODO
+      template< typename DistanceFunction = default_nearest_neighbour_function<Traits>,
+                typename Collection >
+      Collection& k_nearest_neighbor( const T& point, int K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
+        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, size_t>> );
+        std::vector<std::pair<T*, size_t>> max_heap;
+        max_heap.reserve( K );
+        k_nearest_neighbor_impl( point, m_head, K, max_heap, f );
+        for( auto& element: max_heap ) {
+          __detail__::add_element( std::make_pair( *element.first, element.second ), output );
+        }
         return output;
       }
 

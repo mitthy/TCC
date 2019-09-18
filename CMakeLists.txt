@@ -5,8 +5,8 @@ project( TCC VERSION 0.0.0
 
 #Got this idea from EnTT project...
 
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the source code and call cmake from there. Thank you.")
+if( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
+  message( FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the source code and call cmake from there. Thank you." )
 endif()
 
 if( NOT CMAKE_BUILD_TYPE )
@@ -94,7 +94,7 @@ target_compile_features( TCCDataStructure INTERFACE cxx_std_17 )
 target_link_libraries( TCCDataStructure INTERFACE TCCAlgorithm TCCMetaProgramming TCCFunctional )
 
 option( BUILD_TCC_TESTS "Build tests for thesis" OFF )
-if(${BUILD_TCC_TESTS} OR (PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME))
+if( ${BUILD_TCC_TESTS} OR ( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME ) )
   enable_testing()
   add_definitions(-DTEST_ENABLED)
   add_subdirectory(tests)
