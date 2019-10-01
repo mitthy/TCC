@@ -16,16 +16,15 @@
 //Project includes
 #include "memory/allocator/malloc_allocator.hpp"
 #include "meta/detect.hpp"
+#include "meta/utils.hpp"
 #include "algorithm/absolute_difference.hpp"
 #include "algorithm/mean.hpp"
 #include "algorithm/partition.hpp"
+#include "dimensional_traits.hpp"
 
 namespace tcc {
 
   namespace data_structure {
-
-    template< int Index >
-    struct dimension_t {};
 
     namespace __detail__ {
 
@@ -35,7 +34,9 @@ namespace tcc {
       struct dimensional_iterator {
 
       private:
+
         Underlying m_iterator;
+
       public:
 
         using iterator_category = typename std::iterator_traits<Underlying>::iterator_category;
@@ -50,7 +51,7 @@ namespace tcc {
 
         auto
         operator*() {
-          return Traits::get( *m_iterator, dimension_t<Dimension>{} );
+          return Traits::get( *m_iterator, dimension_v<Dimension> );
         }
 
         dimensional_iterator&
@@ -138,9 +139,6 @@ namespace tcc {
       template< typename T >
       constexpr bool has_insert = meta::is_valid_expression_v<insert_expr, T>;
 
-      template< typename T >
-      constexpr bool always_false = false;
-
       static_assert( has_push_back<std::vector<int>> );
 
       template< typename T,
@@ -153,33 +151,11 @@ namespace tcc {
           cont.insert( std::forward<T>( element ) );
         }
         else {
-          static_assert( always_false<T> );
+          static_assert( tcc::meta::always_false<T> );
         }
       }
 
     }
-
-    template< typename T >
-    struct numeric_limits : std::numeric_limits< T > {};
-
-    template< typename T >
-    struct dimensional_traits;
-
-    template< typename... Types >
-    struct dimensional_traits< std::tuple<Types...> > {
-
-      static constexpr int dimensions = sizeof...( Types );
-
-      template< int Index, typename U = std::tuple<Types...> >
-      static auto
-      get( U&& object, dimension_t<Index> ) noexcept {
-        return std::get<Index>( std::forward<U>( object ) );
-      }
-
-      template< int I >
-      using type_at = std::decay_t< decltype( get( std::declval<std::tuple<Types...>>(), std::declval<dimension_t<I>>() ) ) >;
-
-    };
 
     struct mean_split_function {
 
@@ -478,14 +454,14 @@ namespace tcc {
         //TODO
       }
 
-      kd_tree( kd_tree&& rhs ) {
-        //TODO
+      kd_tree( kd_tree&& rhs ): m_allocator( rhs.m_allocator ), m_compare( rhs.m_compare ), m_split( rhs.m_split ), m_head( rhs.m_head ) {
+        rhs.m_head = nullptr;
       }
 
       //Destructor
 
       ~kd_tree() {
-        __remove_node__( m_head );
+        if( m_head  ) __remove_node__( m_head );
       }
 
       template< typename DistanceFunction = default_nearest_neighbour_function<Traits> >
@@ -493,7 +469,7 @@ namespace tcc {
       nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
         using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
         T* ret = nullptr;
-        auto best_distance = numeric_limits<distance_t>::max();
+        auto best_distance = meta::numeric_limits<distance_t>::max();
         nearest_neighbor_impl( point, m_head, &ret, best_distance, f );
         return std::make_pair( *ret, best_distance );
       }
@@ -501,9 +477,10 @@ namespace tcc {
       template< typename DistanceFunction = default_nearest_neighbour_function<Traits>,
                 typename Collection >
       Collection& k_nearest_neighbor( const T& point, int K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
+        //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
         static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, size_t>> );
         std::vector<std::pair<T*, size_t>> max_heap;
-        max_heap.reserve( K );
+        max_heap.reserve( K + 1 );
         k_nearest_neighbor_impl( point, m_head, K, max_heap, f );
         for( auto& element: max_heap ) {
           __detail__::add_element( std::make_pair( *element.first, element.second ), output );
@@ -513,8 +490,8 @@ namespace tcc {
 
     };
 
-  }
+  } //namespace data_structure
 
-}
+} //namespace tcc
 
-#endif
+#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_KD_TREE_HPP

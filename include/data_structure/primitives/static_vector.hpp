@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_STATIC_VECTOR_HPP
-#define TCC_DATA_STRUCTURE_STATIC_VECTOR_HPP
+#ifndef TCC_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
+#define TCC_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -91,7 +91,7 @@ public:
       static_vector( const static_vector& rhs ): m_end( std::uninitialized_copy( reinterpret_cast<const T*>( &rhs.m_data[ 0 ] ),
                                                         static_cast<const T*>( rhs.m_end ), reinterpret_cast<T*>( &m_data[ 0 ] ) ) ) {
       }
-      
+
       static_vector&
       operator=( const static_vector& rhs ) {
         m_end = std::copy( reinterpret_cast<const T*>( &rhs.m_data[ 0 ] ), static_cast<const T*>( rhs.m_end ), reinterpret_cast<T*>( &m_data[ 0 ] ) );

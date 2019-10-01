@@ -28,6 +28,18 @@ namespace tcc {
     template< typename T >
     using print = typename __detail__::__print_impl__< T >::ReceivedType;
 
+    template< typename T >
+    constexpr bool always_false = false;
+
+    template< typename T >
+    struct numeric_limits : std::numeric_limits< T > {};
+
+    template< int I >
+    struct priority_tag : public priority_tag<I - 1> {};
+
+    template<>
+    struct priority_tag<0> {};
+
   }
 
 }

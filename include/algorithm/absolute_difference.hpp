@@ -9,6 +9,9 @@
 #include <algorithm>
 #include <type_traits>
 
+//Project includes
+#include "meta/utils.hpp"
+
 namespace tcc {
 
   namespace algorithm {
@@ -19,12 +22,46 @@ namespace tcc {
 
     struct string_t {};
 
+    namespace abs_customization {
+
+      //Implement static method _ to customize for your type.
+      template< typename T >
+      struct abs;
+
+    }
+
+    namespace __detail__ {
+
+      template< typename T >
+      constexpr auto
+      __abs__( const T& value, meta::priority_tag<0> ) -> decltype( value < 0 ? -value : value ) {
+        return value < 0 ? -value : value;
+      }
+
+      template< typename T >
+      constexpr auto
+      __abs__( const T& value, meta::priority_tag<1> ) -> decltype( std::abs( value ) ) {
+        return std::abs( value );
+      }
+
+      template< typename T >
+      constexpr auto
+      __abs__( const T& value, meta::priority_tag<2> ) -> decltype( abs_customization::abs<T>::_( value ) ) {
+        return abs_customization::abs<T>::_( value );
+      }
+
+    }
+
+    constexpr auto
+    abs = []( const auto& value ) -> decltype( __detail__::__abs__( value, meta::priority_tag<2>{} ) ) {
+      return __detail__::__abs__( value, meta::priority_tag<2>{} );
+    };
+
     namespace __detail__ {
 
       template< typename T >
       size_t absolute_difference( T first, T second, signed_t ) {
-        using std::abs;
-        return abs( first - second );
+        return algorithm::abs( first - second );
       }
 
       template< typename T >
