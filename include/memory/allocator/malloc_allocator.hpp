@@ -12,19 +12,23 @@ namespace tcc {
 
     struct malloc_allocator_t final {} malloc_allocator;
 
-    void* allocate( malloc_allocator_t&, size_t sz, size_t align ) {
+    void*
+    allocate( malloc_allocator_t&, size_t sz, size_t align ) {
       return malloc( sz );
     }
 
-    void* allocate( malloc_allocator_t&, size_t sz ) {
+    void*
+    allocate( malloc_allocator_t&, size_t sz ) {
       return malloc( sz );
     }
 
-    void deallocate( malloc_allocator_t&, void* ptr, size_t align ) {
+    void
+    deallocate( malloc_allocator_t&, void* ptr, size_t align ) {
       free( ptr );
     }
 
-    void deallocate( malloc_allocator_t&, void* ptr ) {
+    void
+    deallocate( malloc_allocator_t&, void* ptr ) {
       free( ptr );
     }
 

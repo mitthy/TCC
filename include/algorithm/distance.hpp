@@ -33,10 +33,9 @@ namespace tcc {
 
     }
 
-    template< typename Iterator, typename Sentinel >
-    ptrdiff_t distance( Iterator first, Sentinel last ) {
-      return __detail__::distance( first, last, typename std::iterator_traits<Iterator>::iterator_category{} );
-    }
+    constexpr auto distance = []( auto first, auto last ) {
+      return __detail__::distance( first, last, typename std::iterator_traits<decltype( first )>::iterator_category{} );
+    };
 
   }
 

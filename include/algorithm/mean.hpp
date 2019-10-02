@@ -1,8 +1,11 @@
 #ifndef TCC_DATA_STRUCTURE_UTILS_MEAN_HPP
 #define TCC_DATA_STRUCTURE_UTILS_MEAN_HPP
 
-#include "distance.hpp"
+//C++ stdlib includes
 #include <numeric>
+
+//Project includes
+#include "distance.hpp"
 
 namespace tcc {
 

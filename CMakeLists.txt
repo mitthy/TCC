@@ -84,6 +84,7 @@ set( TCC_DATA_STRUCTURE_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/functional_bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/dimensional_traits.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/shapes.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/kd_tree.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/quad_tree.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/primitives/static_vector.hpp
