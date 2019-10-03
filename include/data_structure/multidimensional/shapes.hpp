@@ -1,7 +1,6 @@
 #ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
 #define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
 
-#include <tuple>
 #include "meta/utils.hpp"
 #include "algorithm/absolute_difference.hpp"
 
@@ -38,7 +37,7 @@ namespace tcc {
 
     constexpr bool intersects_with( const rectangle& lhs, const rectangle& rhs ) {
       return algorithm::absolute_difference( lhs.x_center, rhs.x_center ) < lhs.half_width + rhs.half_width &&
-             algorithm::absolute_difference( lhs.y_center, rhs.y_center ) < lhs.half_height + rhs.half_height; 
+             algorithm::absolute_difference( lhs.y_center, rhs.y_center ) < lhs.half_height + rhs.half_height;
     }
 
     namespace rectangle_customization {
@@ -51,6 +50,9 @@ namespace tcc {
 
     namespace __detail__ {
 
+      template< int I, typename T >
+      int get( T&& );
+
       template< typename T >
       constexpr auto
       __make_rect__( const T& value, meta::priority_tag<0> ) -> decltype( rectangle( value[0], value[1], value[2], value[3] ) ) {
@@ -59,7 +61,7 @@ namespace tcc {
 
       template< typename T >
       constexpr auto
-      __make_rect__( const T& value, meta::priority_tag<1> ) -> decltype( rectangle( std::get<0>( value ), std::get<1>( value ), std::get<2>( value ), std::get<3>( value ) ) ) {
+      __make_rect__( const T& value, meta::priority_tag<1> ) -> decltype( rectangle( get<0>( value ), get<1>( value ), get<2>( value ), get<3>( value ) ) ) {
         return rectangle( std::get<0>( value ), std::get<1>( value ), std::get<2>( value ), std::get<3>( value ) );
       }
 
