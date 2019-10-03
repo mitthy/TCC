@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include "meta/utils.hpp"
+#include "algorithm/absolute_difference.hpp"
 
 namespace tcc {
 
@@ -14,13 +15,16 @@ namespace tcc {
 
       int y_center;
 
-      int width;
+      int half_width;
 
-      int height;
+      int half_height;
 
       rectangle() = default;
 
-      rectangle( int x_center_, int y_center_, int width_, int height_ ): x_center(x_center_ ), y_center( y_center_ ), width( width_ ), height( height_ ) {}
+      constexpr rectangle( int x_center_, int y_center_, int half_width_, int half_height_ ): x_center( x_center_ ),
+                                                                                    y_center( y_center_ ),
+                                                                                    half_width( half_width_ ),
+                                                                                    half_height( half_height_ ) {}
 
       rectangle( const rectangle& ) = default;
 
@@ -31,6 +35,11 @@ namespace tcc {
       rectangle& operator=( rectangle&& ) = default;
 
     };
+
+    constexpr bool intersects_with( const rectangle& lhs, const rectangle& rhs ) {
+      return algorithm::absolute_difference( lhs.x_center, rhs.x_center ) < lhs.half_width + rhs.half_width &&
+             algorithm::absolute_difference( lhs.y_center, rhs.y_center ) < lhs.half_height + rhs.half_height; 
+    }
 
     namespace rectangle_customization {
 

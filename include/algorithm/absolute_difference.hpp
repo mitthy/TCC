@@ -60,17 +60,20 @@ namespace tcc {
     namespace __detail__ {
 
       template< typename T >
-      size_t absolute_difference( T first, T second, signed_t ) {
+      constexpr size_t
+      absolute_difference( T first, T second, signed_t ) {
         return algorithm::abs( first - second );
       }
 
       template< typename T >
-      size_t absolute_difference( T first, T second, unsigned_t ) {
+      constexpr size_t
+      absolute_difference( T first, T second, unsigned_t ) {
         return first > second ? first - second : second - first;
       }
 
       template< typename T >
-      size_t absolute_difference( T first, T second, string_t ) {
+      constexpr size_t
+      absolute_difference( T first, T second, string_t ) {
         return 0; //TODO
       }
 
@@ -109,12 +112,14 @@ namespace tcc {
     using difference_tag_t = typename difference_traits< T >::tag;
 
     template< typename T >
-    size_t absolute_difference( T first, T second ) {
+    constexpr size_t
+    absolute_difference( T first, T second ) {
       return __detail__::absolute_difference( first, second, difference_tag_t<T>{} );
     }
 
     template< typename U, typename T >
-    size_t absolute_difference( T first, U second ) {
+    constexpr size_t
+    absolute_difference( T first, U second ) {
       if( first > second ) {
         return first - second;
       }
