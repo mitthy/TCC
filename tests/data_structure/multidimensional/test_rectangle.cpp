@@ -4,15 +4,14 @@
 using namespace tcc::data_structure;
 
 TEST( TestRectangle, TestIntersection ) {
-  rectangle rect{ 7, 7, 2, 5 };
-  EXPECT_TRUE( intersects_with( rect, rect ) );
-  EXPECT_TRUE( intersects_with( rect, rectangle{ 10, 11, 2, 3 } ) );
-  EXPECT_FALSE( intersects_with( rect,  rectangle{ 10, 11, 1, 3 } ) );
-  EXPECT_FALSE( intersects_with( rect,  rectangle{ 10, 16, 1, 4 } ) );
-  EXPECT_TRUE( intersects_with( rect,  rectangle{ 4, 11, 2, 3 } ) );
-  EXPECT_FALSE( intersects_with( rect,  rectangle{ 4, 11, 1, 3 } ) );
-  EXPECT_FALSE( intersects_with( rect,  rectangle{ 4, 16, 1, 4 } ) );
-  EXPECT_TRUE( intersects_with( rect,  rectangle{ 10, 16, 2, 5 } ) );
-  EXPECT_FALSE( intersects_with( rect,  rectangle{ 10, 16, 2, 4 } ) );
-  EXPECT_FALSE( intersects_with( rect, rectangle{ 0, 0, 1, 1 } ) );
+  EXPECT_TRUE( intersects_with( rectangle{ 5, 2, 4, 10 }, rectangle{ 5, 2, 4, 10 } ) );
+  EXPECT_TRUE( intersects_with( rectangle{ 5, 2, 4, 10 }, rectangle{ 9, 8, 4, 6 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 10, 8, 1, 6 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 10, 12, 2, 8 } ) );
+  EXPECT_TRUE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 2, 8, 3, 6 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 2, 8, 2, 6 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 2, 13, 2, 8 } ) );
+  EXPECT_TRUE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 8, 11, 4, 10 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 },  rectangle{ 8, 13, 4, 8 } ) );
+  EXPECT_FALSE( intersects_with( rectangle{ 5, 2, 4, 10 }, rectangle{ -1, -1, 2, 2 } ) );
 }

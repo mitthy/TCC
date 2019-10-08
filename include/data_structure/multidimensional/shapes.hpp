@@ -1,6 +1,10 @@
 #ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
 #define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
 
+//C++ stblib includes
+#include <iostream>
+
+//Project includes
 #include "meta/utils.hpp"
 #include "algorithm/absolute_difference.hpp"
 
@@ -10,20 +14,20 @@ namespace tcc {
 
     struct rectangle {
 
-      int x_center;
+      int x_left;
 
-      int y_center;
+      int y_top;
 
-      int half_width;
+      int width;
 
-      int half_height;
+      int height;
 
       rectangle() = default;
 
-      constexpr rectangle( int x_center_, int y_center_, int half_width_, int half_height_ ): x_center( x_center_ ),
-                                                                                    y_center( y_center_ ),
-                                                                                    half_width( half_width_ ),
-                                                                                    half_height( half_height_ ) {}
+      constexpr rectangle( int x_left_, int y_top_, int width_, int height_ ):  x_left( x_left_ ),
+                                                                                y_top( y_top_ ),
+                                                                                width( width_ ),
+                                                                                height( height_ ) {}
 
       rectangle( const rectangle& ) = default;
 
@@ -35,9 +39,15 @@ namespace tcc {
 
     };
 
+    std::ostream& operator<<( std::ostream& os, const rectangle& rect ) {
+      os << "Rect at -> TL: (" << rect.x_left << ':' << rect.y_top << ") ";
+      os << "BR: (" << rect.x_left + rect.width << ':' << rect.y_top + rect.height << ") ";
+      return os;
+    }
+
     constexpr bool intersects_with( const rectangle& lhs, const rectangle& rhs ) {
-      return algorithm::absolute_difference( lhs.x_center, rhs.x_center ) < lhs.half_width + rhs.half_width &&
-             algorithm::absolute_difference( lhs.y_center, rhs.y_center ) < lhs.half_height + rhs.half_height;
+      return  !( ( lhs.x_left > ( rhs.x_left + rhs.width ) ) || ( rhs.x_left > ( lhs.x_left + lhs.width ) ) ||
+              ( lhs.y_top > ( rhs.y_top + rhs.height ) ) || ( rhs.y_top > ( lhs.y_top + lhs.height ) ) );
     }
 
     namespace rectangle_customization {

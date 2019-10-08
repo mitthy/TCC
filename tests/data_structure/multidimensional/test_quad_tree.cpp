@@ -31,7 +31,7 @@ namespace tcc {
 using quad_tree_t = tcc::data_structure::rect_quad_tree<std::tuple<int,int,int,int>>;
 
 TEST( TestQuadTree, TestCreation ) {
-  quad_tree_t tree{};
+  quad_tree_t tree{ tcc::data_structure::rectangle{ -1000, -1000, 2000, 2000 } };
   for( int i = 0; i < 256; ++i ) {
     tree.insert( std::make_tuple( ( i + 5 ) * 2, ( i + 5 ) * 2, 10, 10 ) );
   }
