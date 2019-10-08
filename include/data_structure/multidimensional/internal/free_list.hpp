@@ -108,6 +108,11 @@ namespace tcc {
           m_next_free = pos;
         }
 
+        int
+        size() const {
+          return m_size;
+        }
+
         POD&
         operator[]( int pos ) {
           return m_data[ pos ].m_actual;

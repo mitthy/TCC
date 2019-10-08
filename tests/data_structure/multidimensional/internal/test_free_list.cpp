@@ -28,7 +28,7 @@ TEST( TestFreeList, TestRemove ) {
   }
   //Remove some random indexes.
   int indexes[] = { -1, 0, 5, 17, 13, 60, 49, 2, 1, 8 };
-  auto sz = sizeof( indexes ) / sizeof( int );
+  int sz = sizeof( indexes ) / sizeof( int );
   for( int i = 1; i < sz; ++i ) {
     list.remove( indexes[ i ] );
   }
@@ -45,7 +45,7 @@ TEST( TestFreeList, TestRemovePush ) {
   }
   //Remove some random indexes.
   int indexes[] = { -1, 0, 5, 17, 13, 60, 49, 2, 1, 8 };
-  auto sz = sizeof( indexes ) / sizeof( int );
+  int sz = sizeof( indexes ) / sizeof( int );
   for( int i = 1; i < sz; ++i ) {
     list.remove( indexes[ i ] );
   }

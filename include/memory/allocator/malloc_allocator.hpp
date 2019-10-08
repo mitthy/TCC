@@ -14,7 +14,7 @@ namespace tcc {
 
     void*
     allocate( malloc_allocator_t&, size_t sz, size_t align ) {
-      return malloc( sz );
+      return aligned_alloc(align, sz);
     }
 
     void*
@@ -24,6 +24,7 @@ namespace tcc {
 
     void
     deallocate( malloc_allocator_t&, void* ptr, size_t align ) {
+      ( void ) align; //silence unused parameter warning
       free( ptr );
     }
 

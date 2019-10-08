@@ -200,7 +200,7 @@ namespace tcc {
       template< size_t... Index >
       auto
       distance_impl( const auto& lhs, const auto& rhs, std::index_sequence<Index...> ) const noexcept {
-        return (element_distance( Traits::get( lhs, dimension_t<Index>{} ), Traits::get( rhs, dimension_t<Index>{} ) ) + ... );
+        return ( element_distance( Traits::get( lhs, dimension_t<Index>{} ), Traits::get( rhs, dimension_t<Index>{} ) ) + ... );
       }
 
       template< typename T >
@@ -360,16 +360,18 @@ namespace tcc {
         }
       }
 
+      struct heap_compare {
+        template< typename DistanceType >
+        bool operator()( const std::pair<T*, DistanceType>& lhs, const std::pair<T*, DistanceType>& rhs ) const {
+          return lhs.second < rhs.second;
+        }
+      };
       template< int I,
-                typename DistanceFunction >
+                typename DistanceFunction,
+                typename DistanceType >
       void
-      k_nearest_neighbor_impl( const T& value, node<I>* node, int K, std::vector<std::pair<T*, size_t>>& max_heap,  DistanceFunction f ) const noexcept {
+      k_nearest_neighbor_impl( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
         using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
-        struct heap_compare {
-          bool operator()( const std::pair<T*, size_t>& lhs, const std::pair<T*, size_t>& rhs ) const {
-            return lhs.second < rhs.second;
-          }
-        };
         if( !node->m_left && !node->m_right ) {
           T* stored = __get_element__<T>( node );
           auto calculated_distance = f( value, *stored );
@@ -476,10 +478,11 @@ namespace tcc {
 
       template< typename DistanceFunction = default_nearest_neighbour_function<Traits>,
                 typename Collection >
-      Collection& k_nearest_neighbor( const T& point, int K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
+      Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
         //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
-        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, size_t>> );
-        std::vector<std::pair<T*, size_t>> max_heap;
+        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
+        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
+        std::vector<std::pair<T*, distance_t>> max_heap;
         max_heap.reserve( K + 1 );
         k_nearest_neighbor_impl( point, m_head, K, max_heap, f );
         for( auto& element: max_heap ) {

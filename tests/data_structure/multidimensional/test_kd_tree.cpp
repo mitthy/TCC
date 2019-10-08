@@ -22,32 +22,32 @@ TEST( TestKDTree, TestNearestNeighborCorrectness ) {
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
     EXPECT_EQ( nearest, std::make_tuple( 10, 9, 11 ) );
-    EXPECT_EQ( distance, 2 );
+    EXPECT_EQ( distance, 2u );
   }
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
     EXPECT_EQ( nearest, std::make_tuple( 44, 78, 67 ) );
-    EXPECT_EQ( distance, 1169 );
+    EXPECT_EQ( distance, 1169u );
   }
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 52, 52, 54 ) );
     EXPECT_EQ( nearest, std::make_tuple( 50, 50, 54 ) );
-    EXPECT_EQ( distance, 8 );
+    EXPECT_EQ( distance, 8u );
   }
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 49, 49, 52 ) );
     EXPECT_EQ( nearest, std::make_tuple( 49, 50, 53 )  );
-    EXPECT_EQ( distance, 2 );
+    EXPECT_EQ( distance, 2u );
   }
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 21, 23, 24 ) );
     EXPECT_EQ( nearest, std::make_tuple( 20, 24, 23 ) );
-    EXPECT_EQ( distance, 3 );
+    EXPECT_EQ( distance, 3u );
   }
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 0, 49, 87 ) );
     EXPECT_EQ( nearest, std::make_tuple( 0, 49, 87 ) );
-    EXPECT_EQ( distance, 0 );
+    EXPECT_EQ( distance, 0u );
   }
 }
 
@@ -70,6 +70,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor( std::make_tuple( 10, 10, 10 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
   {
@@ -77,6 +79,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor( std::make_tuple( 70, 60, 80 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
   {
@@ -84,6 +88,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor( std::make_tuple( 52, 52, 54 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 52, 52, 54 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
   {
@@ -91,6 +97,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor( std::make_tuple( 49, 49, 52 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 49, 49, 52 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
   {
@@ -98,6 +106,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor( std::make_tuple( 21, 23, 24 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 21, 23, 24 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
   {
@@ -105,6 +115,8 @@ TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
     output_vector.reserve( 1 );
     auto [nearestK, distanceK] = tree.k_nearest_neighbor(std::make_tuple( 0, 49, 87 ), 1, output_vector )[ 0 ];
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 0, 49, 87 ) );
+    ( void ) nearestK;
+    ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
   }
 }

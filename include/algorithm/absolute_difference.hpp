@@ -33,27 +33,45 @@ namespace tcc {
     namespace __detail__ {
 
       template< typename T >
+      using is_unsigned = std::enable_if_t<std::is_unsigned_v<T>, bool>;
+
+      template< typename T >
+      using is_signed = std::enable_if_t<std::is_signed_v<T>, bool>;
+
+      template< typename T >
       constexpr auto
       __abs__( const T& value, meta::priority_tag<0> ) -> decltype( value < 0 ? -value : value ) {
         return value < 0 ? -value : value;
       }
 
-      template< typename T >
-      constexpr auto
-      __abs__( const T& value, meta::priority_tag<1> ) -> decltype( std::abs( value ) ) {
-        return std::abs( value );
+      template< typename T, is_signed<T> = true >
+      constexpr size_t
+      __abs__( const T& value, meta::priority_tag<1> ) {
+        return value < 0 ? -value : value;
+      }
+
+      template< typename T, is_unsigned<T> = true >
+      constexpr size_t
+      __abs__( const T& value, meta::priority_tag<2> ) {
+        return value;
       }
 
       template< typename T >
       constexpr auto
-      __abs__( const T& value, meta::priority_tag<2> ) -> decltype( abs_customization::abs<T>::_( value ) ) {
+      __abs__( const T& value, meta::priority_tag<3> ) -> decltype( static_cast<size_t>( std::abs( value ) ) ) {
+        return static_cast<size_t>( std::abs( value ) );
+      }
+
+      template< typename T >
+      constexpr auto
+      __abs__( const T& value, meta::priority_tag<4> ) -> decltype( abs_customization::abs<T>::_( value ) ) {
         return abs_customization::abs<T>::_( value );
       }
 
     }
 
     constexpr auto
-    abs = []( const auto& value ) -> decltype( __detail__::__abs__( value, meta::priority_tag<2>{} ) ) {
+    abs = []( const auto& value ) -> decltype( __detail__::__abs__( value, meta::priority_tag<4>{} ) ) {
       return __detail__::__abs__( value, meta::priority_tag<2>{} );
     };
 
@@ -77,19 +95,19 @@ namespace tcc {
       using is_string = std::enable_if_t<std::is_same_v<T, std::string>, bool>;
 
       template< typename T, is_signed<T> = true >
-      constexpr auto
+      constexpr size_t
       __absolute_difference__( T first, T second, meta::priority_tag<0> ) {
         return algorithm::abs( first - second );
       }
 
       template< typename T, is_unsigned<T> = true >
-      constexpr auto
+      constexpr size_t
       __absolute_difference__( T first, T second, meta::priority_tag<1> ) {
         return first > second ? first - second : second - first;
       }
 
       template< typename T, is_string<T> = true >
-      constexpr auto
+      constexpr size_t
       __absolute_difference__( T first, T second, meta::priority_tag<2> ) {
         return 0; //TODO
       }
