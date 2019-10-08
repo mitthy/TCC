@@ -57,76 +57,57 @@ namespace tcc {
       return __detail__::__abs__( value, meta::priority_tag<2>{} );
     };
 
+    namespace absolute_difference_customization {
+
+      //Implement static method _ to customize for your type.
+      template< typename T >
+      struct absolute_difference;
+
+    }
+
     namespace __detail__ {
 
       template< typename T >
-      constexpr size_t
-      absolute_difference( T first, T second, signed_t ) {
+      using is_signed = std::enable_if_t<std::is_signed_v<T>, bool>;
+
+      template< typename T >
+      using is_unsigned = std::enable_if_t<std::is_unsigned_v<T>, bool>;
+
+      template< typename T >
+      using is_string = std::enable_if_t<std::is_same_v<T, std::string>, bool>;
+
+      template< typename T, is_signed<T> = true >
+      constexpr auto
+      __absolute_difference__( T first, T second, meta::priority_tag<0> ) {
         return algorithm::abs( first - second );
       }
 
-      template< typename T >
-      constexpr size_t
-      absolute_difference( T first, T second, unsigned_t ) {
+      template< typename T, is_unsigned<T> = true >
+      constexpr auto
+      __absolute_difference__( T first, T second, meta::priority_tag<1> ) {
         return first > second ? first - second : second - first;
       }
 
-      template< typename T >
-      constexpr size_t
-      absolute_difference( T first, T second, string_t ) {
+      template< typename T, is_string<T> = true >
+      constexpr auto
+      __absolute_difference__( T first, T second, meta::priority_tag<2> ) {
         return 0; //TODO
+      }
+
+      template< typename T >
+      constexpr auto
+      __absolute_difference__( T first, T second, meta::priority_tag<3> ) -> decltype( absolute_difference_customization::absolute_difference<T>::_( first, second ) ) {
+        return absolute_difference_customization::absolute_difference<T>::_( first, second );
       }
 
     }  //namespace __detail__
 
-    template< typename T >
-    struct difference_traits {
-      using tag = signed_t;
+    constexpr auto
+    absolute_difference = []( auto&& first, auto&& second ) ->
+    decltype( __detail__::__absolute_difference__( std::forward<decltype( first )>( first ), std::forward<decltype( second )>( second ), meta::priority_tag<3>{} ) ) {
+      static_assert( std::is_same_v<std::decay_t<decltype( first )>, std::decay_t<decltype( second )>> );
+      return __detail__::__absolute_difference__( std::forward<decltype( first )>( first ), std::forward<decltype( second )>( second ), meta::priority_tag<3>{} );
     };
-
-    template<>
-    struct difference_traits< unsigned char > {
-      using tag = unsigned_t;
-    };
-
-    template<>
-    struct difference_traits< unsigned int > {
-      using tag = unsigned_t;
-    };
-
-    template<>
-    struct difference_traits< unsigned long > {
-      using tag = unsigned_t;
-    };
-
-    template< typename T >
-    struct difference_traits< const T > : difference_traits< T > {};
-
-    template< typename T >
-    struct difference_traits< volatile T > : difference_traits< T > {};
-
-    template< typename T >
-    struct difference_traits< const volatile T > : difference_traits< T > {};
-
-    template< typename T >
-    using difference_tag_t = typename difference_traits< T >::tag;
-
-    template< typename T >
-    constexpr size_t
-    absolute_difference( T first, T second ) {
-      return __detail__::absolute_difference( first, second, difference_tag_t<T>{} );
-    }
-
-    template< typename U, typename T >
-    constexpr size_t
-    absolute_difference( T first, U second ) {
-      if( first > second ) {
-        return first - second;
-      }
-      else {
-        return second - first;
-      }
-    }
 
   } //namespace algorithm
 

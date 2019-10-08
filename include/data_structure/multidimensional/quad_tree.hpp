@@ -153,11 +153,18 @@ namespace tcc {
         m_nodes.push_back( node{ -1, 0 } );
       }
 
-      void insert( const T& value ) {
+      void
+      insert( const T& value ) {
         int32_t index = m_data.size();
         auto rect = make_rectangle( value );
         m_data.emplace_back( value, rect );
         __insert__( &m_nodes[ 0 ], m_rect, index, rect, 0 );
+      }
+
+      void
+      remove( const T& value ) {
+        node* head = &m_nodes[ 0 ];
+        auto rect = make_rectangle( value );
       }
 
     };
