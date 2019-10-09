@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "data_structure/multidimensional/quad_tree.hpp"
 #include <tuple>
+#include <type_traits>
 
 struct element_t {
   int x, y, hw, hh;

@@ -94,6 +94,7 @@ namespace tcc {
               if( !prev ) {
                 //Create previous node and build down to a leaf...
                 //TODO
+                return nullptr;
               }
               else {
                 return nullptr;
@@ -101,8 +102,13 @@ namespace tcc {
             }
             else {
               //We gotta build down to a leaf here ourselves...
-
+              //TODO
+              return nullptr;
             }
+          }
+          else {
+            //TODO
+            return nullptr;
           }
         }
         else {
@@ -131,8 +137,11 @@ namespace tcc {
 
     public:
 
-      bitmapped_vector_trie( Allocator* alloc = &memory::malloc_allocator ):
-                            m_allocator( alloc ), m_root( create_leaf_node( *alloc ) ), m_base_mask( Mask ), m_rank( 0 ), m_size( 0 ) {}
+      bitmapped_vector_trie( Allocator* alloc = &memory::malloc_allocator ):  m_root( create_leaf_node( *alloc ) ),
+                                                                              m_base_mask( Mask ),
+                                                                              m_rank( 0 ),
+                                                                              m_size( 0 ),
+                                                                              m_allocator( alloc ) {}
 
       void
       push_back( const T& element ) {

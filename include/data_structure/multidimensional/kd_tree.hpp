@@ -29,8 +29,7 @@ namespace tcc {
     namespace __detail__ {
 
       template< typename Underlying,
-                int Dimension,
-                typename Traits >
+                int Dimension >
       struct dimensional_iterator {
 
       private:
@@ -40,10 +39,10 @@ namespace tcc {
       public:
 
         using iterator_category = typename std::iterator_traits<Underlying>::iterator_category;
-        using value_type = typename Traits::template type_at<Dimension>;
+        using value_type = dimension::type_at<typename Underlying::value_type, Dimension>;
         using difference_type = typename std::iterator_traits<Underlying>::difference_type;
-        using pointer = typename Traits::template type_at<Dimension>*;
-        using reference = typename Traits::template type_at<Dimension>&;
+        using pointer = value_type*;
+        using reference = value_type&;
 
         dimensional_iterator(): m_iterator() {}
         explicit dimensional_iterator( const Underlying & it ): m_iterator( it ) { }
@@ -51,7 +50,7 @@ namespace tcc {
 
         auto
         operator*() {
-          return Traits::get( *m_iterator, dimension_v<Dimension> );
+          return dimension::get( *m_iterator, dimension_v<Dimension> );
         }
 
         dimensional_iterator&
@@ -194,13 +193,13 @@ namespace tcc {
       template< typename T, typename U, int Index >
       auto
       operator()( const T& element, const U& stored, const dimension_t<Index> ) const noexcept {
-        return element_distance( Traits::get( element, dimension_t<Index>{} ), stored );
+        return element_distance( dimension::get( element, dimension_t<Index>{} ), stored );
       }
 
       template< size_t... Index >
       auto
       distance_impl( const auto& lhs, const auto& rhs, std::index_sequence<Index...> ) const noexcept {
-        return ( element_distance( Traits::get( lhs, dimension_t<Index>{} ), Traits::get( rhs, dimension_t<Index>{} ) ) + ... );
+        return ( element_distance( dimension::get( lhs, dimension_t<Index>{} ), dimension::get( rhs, dimension_t<Index>{} ) ) + ... );
       }
 
       template< typename T >
@@ -262,7 +261,7 @@ namespace tcc {
                 typename U >
       static auto
       __get__( U&& el ) {
-        return Traits::get( std::forward<U>( el ), dimension_t<I>{} );
+        return dimension::get( std::forward<U>( el ), dimension_t<I>{} );
       }
 
       Allocator* m_allocator;
@@ -276,7 +275,7 @@ namespace tcc {
       template< int NodeDimension >
       void
       __remove_node__( node<NodeDimension>* to_delete ) noexcept {
-        using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<NodeDimension>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<NodeDimension>>() ) )>;
         if( !to_delete->m_left && !to_delete->m_right ) {
           T* leaf = __get_element__<T>( to_delete );
           leaf->~T();
@@ -312,8 +311,8 @@ namespace tcc {
           return create_node<Dimension>( *first );
         }
         else {
-          auto begin = __detail__::dimensional_iterator<InputIterator, Dimension, Traits>( first );
-          auto end = __detail__::dimensional_iterator<Sentinel, Dimension, Traits>( last );
+          auto begin = __detail__::dimensional_iterator<InputIterator, Dimension>( first );
+          auto end = __detail__::dimensional_iterator<Sentinel, Dimension>( last );
           auto split = m_split( begin, end );
           auto temp_function = m_compare;
           auto partition_function = [&temp_function, split]( const auto& element ) {
@@ -333,7 +332,7 @@ namespace tcc {
                 typename DistanceFunction >
       void
       nearest_neighbor_impl( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const noexcept {
-        using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           //Leaf case. Check if the current node is a better match.
           T* stored = __get_element__<T>( node );
@@ -345,7 +344,7 @@ namespace tcc {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( Traits::get( value, dimension_t<I>{} ), stored_value ) ) {
+          if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
             nearest_neighbor_impl( value, node->m_left, best, best_distance, f );
             if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
               nearest_neighbor_impl( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
@@ -371,7 +370,7 @@ namespace tcc {
                 typename DistanceType >
       void
       k_nearest_neighbor_impl( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
-        using maybe_actual_t = std::decay_t<decltype( Traits::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           T* stored = __get_element__<T>( node );
           auto calculated_distance = f( value, *stored );
@@ -385,7 +384,7 @@ namespace tcc {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( Traits::get( value, dimension_t<I>{} ), stored_value ) ) {
+          if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
             k_nearest_neighbor_impl( value, node->m_left, K, max_heap, f );
             if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
               k_nearest_neighbor_impl( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
@@ -453,7 +452,8 @@ namespace tcc {
       //Copy constructors
 
       kd_tree( const kd_tree& rhs ) {
-        //TODO
+        struct dummy {};
+        static_assert( meta::always_false<dummy>, "TODO: Not implemented yet." );
       }
 
       kd_tree( kd_tree&& rhs ): m_allocator( rhs.m_allocator ), m_compare( rhs.m_compare ), m_split( rhs.m_split ), m_head( rhs.m_head ) {

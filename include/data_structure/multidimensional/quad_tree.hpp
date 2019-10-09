@@ -113,7 +113,7 @@ namespace tcc {
         assert( _3 == first_child + 3 && "Bottom right child should be allocated 3 after top left.\n" );
         int linked_list_element = cur_node->m_element_index;
         while( linked_list_element != -1 ) {
-          assert( m_elements[ linked_list_element ].m_node_element < m_data.size() && "Node element should be a valid index\n" );
+          assert( m_elements[ linked_list_element ].m_node_element < ( int ) m_data.size() && "Node element should be a valid index\n" );
           int32_t element_index = m_elements[ linked_list_element ].m_node_element;
           auto& element_rect = m_data[ m_elements[ linked_list_element ].m_node_element ].second;
           __insert_into_quadrants__( first_child, node_rect, element_index, element_rect, depth );

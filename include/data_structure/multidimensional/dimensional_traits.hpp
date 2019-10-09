@@ -23,16 +23,52 @@ namespace tcc {
 
       static constexpr int dimensions = sizeof...( Types );
 
-      template< int Index, typename U = std::tuple<Types...> >
-      static constexpr auto
-      get( U&& object, dimension_t<Index> ) noexcept {
-        return std::get<Index>( std::forward<U>( object ) );
+    };
+
+    namespace dimension {
+
+      namespace get_customization {
+
+        template< typename T >
+        struct get;
+
       }
 
-      template< int I >
-      using type_at = std::decay_t< decltype( get( std::declval<std::tuple<Types...>>(), std::declval<dimension_t<I>>() ) ) >;
+      namespace __detail__ {
 
-    };
+        template< int I >
+        auto get( int );
+
+        template< int I, typename T >
+        constexpr decltype( auto )
+        __get__( T&& value, tcc::meta::priority_tag<0> ) -> decltype( get<I>( std::forward<T>( value ) ) ) {
+          return get<I>( std::forward<T>( value ) );
+        }
+
+        template< int I, typename T >
+        constexpr decltype( auto )
+        __get__( T&& value, tcc::meta::priority_tag<1> ) -> decltype( get_customization::get<T>::template _<I>( std::forward<T>( value ) ) ) {
+          return get_customization::get<T>::template _<I>( std::forward<T>( value ) );
+        }
+
+        struct __get_t__ {
+
+          template< typename T, int I >
+          constexpr decltype( auto )
+          operator() ( T&& value, dimension_t<I> ) const {
+            return __get__<I>( std::forward<T>( value ), tcc::meta::priority_tag<1>{} );
+          }
+
+        };
+
+      }
+
+      constexpr __detail__::__get_t__ get = {};
+
+      template< typename T, int I >
+      using type_at = std::decay_t<decltype( get( std::declval<T>(), dimension_v<I> ) )>;
+
+    }
 
   } //namespace data_structure
 
