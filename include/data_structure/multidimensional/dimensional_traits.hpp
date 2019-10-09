@@ -4,6 +4,7 @@
 #include <utility>
 #include <tuple>
 #include "meta/utils.hpp"
+#include "meta/detect.hpp"
 
 namespace tcc {
 
@@ -37,7 +38,12 @@ namespace tcc {
       namespace __detail__ {
 
         template< int I >
-        auto get( int );
+        constexpr decltype( auto )
+        get( int );
+
+        template< int I >
+        constexpr decltype( auto )
+        get( int, dimension_t<I> );
 
         template< int I, typename T >
         constexpr decltype( auto )
@@ -47,7 +53,13 @@ namespace tcc {
 
         template< int I, typename T >
         constexpr decltype( auto )
-        __get__( T&& value, tcc::meta::priority_tag<1> ) -> decltype( get_customization::get<T>::template _<I>( std::forward<T>( value ) ) ) {
+        __get__( T&& value, tcc::meta::priority_tag<1> ) -> decltype( get( std::forward<T>( value ), dimension_v<I> ) ) {
+          return get( std::forward<T>( value ), dimension_v<I> );
+        }
+
+        template< int I, typename T >
+        constexpr decltype( auto )
+        __get__( T&& value, tcc::meta::priority_tag<2> ) -> decltype( get_customization::get<T>::template _<I>( std::forward<T>( value ) ) ) {
           return get_customization::get<T>::template _<I>( std::forward<T>( value ) );
         }
 
@@ -56,7 +68,7 @@ namespace tcc {
           template< typename T, int I >
           constexpr decltype( auto )
           operator() ( T&& value, dimension_t<I> ) const {
-            return __get__<I>( std::forward<T>( value ), tcc::meta::priority_tag<1>{} );
+            return __get__<I>( std::forward<T>( value ), tcc::meta::priority_tag<2>{} );
           }
 
         };
