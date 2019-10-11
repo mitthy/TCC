@@ -176,39 +176,6 @@ namespace tcc {
 
     };
 
-    template< typename Traits >
-    struct default_nearest_neighbour_function {
-
-    private:
-
-      template< typename T >
-      static auto
-      element_distance( const T& lhs, const T& rhs ) noexcept {
-        auto tmp = algorithm::absolute_difference( lhs, rhs );
-        return tmp * tmp;
-      }
-
-    public:
-
-      template< typename T, typename U, int Index >
-      auto
-      operator()( const T& element, const U& stored, const dimension_t<Index> ) const noexcept {
-        return element_distance( dimension::get( element, dimension_t<Index>{} ), stored );
-      }
-
-      template< size_t... Index >
-      auto
-      distance_impl( const auto& lhs, const auto& rhs, std::index_sequence<Index...> ) const noexcept {
-        return ( element_distance( dimension::get( lhs, dimension_t<Index>{} ), dimension::get( rhs, dimension_t<Index>{} ) ) + ... );
-      }
-
-      template< typename T >
-      auto
-      operator()( const T& lhs, const T& rhs ) const noexcept {
-        return distance_impl( lhs, rhs, std::make_index_sequence<Traits::dimensions>{} );
-      }
-    };
-
     template< typename T,
               typename SplitFunction = mean_split_function,
               typename CompareFunction = less_compare_function,
@@ -466,17 +433,17 @@ namespace tcc {
         if( m_head  ) __remove_node__( m_head );
       }
 
-      template< typename DistanceFunction = default_nearest_neighbour_function<Traits> >
-      auto
+      template< typename DistanceFunction = default_nearest_neighbour_function >
+      decltype( auto )
       nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
         using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
         T* ret = nullptr;
         auto best_distance = meta::numeric_limits<distance_t>::max();
         nearest_neighbor_impl( point, m_head, &ret, best_distance, f );
-        return std::make_pair( *ret, best_distance );
+        return std::pair<const T&, distance_t>( *ret, best_distance );
       }
 
-      template< typename DistanceFunction = default_nearest_neighbour_function<Traits>,
+      template< typename DistanceFunction = default_nearest_neighbour_function,
                 typename Collection >
       Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
         //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
