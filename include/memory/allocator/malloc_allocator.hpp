@@ -1,12 +1,12 @@
-#ifndef TCC_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_HPP
-#define TCC_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_HPP
+#ifndef GEOMETRICKS_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_HPP
+#define GEOMETRICKS_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_HPP
 
 //C stdlib includes
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-namespace tcc {
+namespace geometricks {
 
   namespace memory {
 
@@ -37,4 +37,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_MEMORY_ALLOCATOR_MALLOC_ALLOCATOR_HPP

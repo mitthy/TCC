@@ -7,7 +7,7 @@ TEST( TestPartition, TestPartitionWithLessThan ) {
   auto func = []( const auto& element ) {
     return element <= 5;
   };
-  auto middle = tcc::algorithm::partition( test_vector.begin(), test_vector.end(), func );
+  auto middle = geometricks::algorithm::partition( test_vector.begin(), test_vector.end(), func );
   for( auto it = test_vector.begin(); it != middle; ++it ) {
     EXPECT_TRUE( *it <= 5 );
   }
@@ -22,8 +22,8 @@ TEST( TestPartition, TestPartitionEmptyVector ) {
   auto always_false = []( const auto& ) { return false; };
   auto begin = empty_vector.begin();
   auto end = empty_vector.end();
-  EXPECT_TRUE( begin == end && end == tcc::algorithm::partition( begin, end, always_true ) );
-  EXPECT_TRUE( begin == end && end == tcc::algorithm::partition( begin, end, always_false ) );
+  EXPECT_TRUE( begin == end && end == geometricks::algorithm::partition( begin, end, always_true ) );
+  EXPECT_TRUE( begin == end && end == geometricks::algorithm::partition( begin, end, always_false ) );
 }
 
 TEST( TestPartition, TestPartitionAllTrue ) {
@@ -31,7 +31,7 @@ TEST( TestPartition, TestPartitionAllTrue ) {
   auto begin = test_vector.begin();
   auto end = test_vector.end();
   auto always_true = []( const auto& ) { return true; };
-  EXPECT_TRUE( begin != end && end == tcc::algorithm::partition( begin, end, always_true ) );
+  EXPECT_TRUE( begin != end && end == geometricks::algorithm::partition( begin, end, always_true ) );
 }
 
 TEST( TestPartition, TestPartitionAllFalse ) {
@@ -39,5 +39,5 @@ TEST( TestPartition, TestPartitionAllFalse ) {
   auto begin = test_vector.begin();
   auto end = test_vector.end();
   auto always_false = []( const auto& ) { return false; };
-  EXPECT_TRUE( begin != end && begin == tcc::algorithm::partition( begin, end, always_false ) );
+  EXPECT_TRUE( begin != end && begin == geometricks::algorithm::partition( begin, end, always_false ) );
 }

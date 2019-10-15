@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -13,7 +13,7 @@
 #include "shapes.hpp"
 #include "internal/free_list.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -171,6 +171,6 @@ namespace tcc {
 
   } //namespace data_structure
 
-}  //namespace tcc
+}  //namespace geometricks
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_QUAD_TREE_HPP

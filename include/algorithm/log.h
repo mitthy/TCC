@@ -1,12 +1,12 @@
-#ifndef TCC_DATA_STRUCTURE_UTILS_LOG_H
-#define TCC_DATA_STRUCTURE_UTILS_LOG_H
+#ifndef GEOMETRICKS_ALGORITHM_LOG_H
+#define GEOMETRICKS_ALGORITHM_LOG_H
 
 //C stdlib includes
 #include <stdint.h>
 
-namespace tcc {
+namespace geometricks {
 
-  namespace data_structure {
+  namespace algorithm {
 
     namespace utils {
 
@@ -26,8 +26,8 @@ namespace tcc {
 
   }  //namespace data_structure
 
-}  //namespace tcc
+}  //namespace geometricks
 
 
 
-#endif
+#endif //GEOMETRICKS_ALGORITHM_LOG_H

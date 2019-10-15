@@ -1,7 +1,7 @@
-#ifndef TCC_META_UTILS_HPP
-#define TCC_META_UTILS_HPP
+#ifndef GEOMETRICKS_META_UTILS_HPP
+#define GEOMETRICKS_META_UTILS_HPP
 
-namespace tcc {
+namespace geometricks {
 
   namespace meta {
 
@@ -44,4 +44,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_META_UTILS_HPP

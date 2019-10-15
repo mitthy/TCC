@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-using namespace tcc::algorithm;
+using namespace geometricks::algorithm;
 
 TEST( TestAbsoluteDifference, TestABS ) {
-  EXPECT_EQ( tcc::algorithm::abs( 4u ), 4u );
-  EXPECT_EQ( tcc::algorithm::abs( 4 ), 4u );
-  EXPECT_EQ( tcc::algorithm::abs( std::numeric_limits<int>::max() ), static_cast<uint64_t>( std::numeric_limits<int>::max() ) );
+  EXPECT_EQ( geometricks::algorithm::abs( 4u ), 4u );
+  EXPECT_EQ( geometricks::algorithm::abs( 4 ), 4u );
+  EXPECT_EQ( geometricks::algorithm::abs( std::numeric_limits<int>::max() ), static_cast<uint64_t>( std::numeric_limits<int>::max() ) );
 }
 
 TEST( TestAbsoluteDifference, TestSigned ) {
@@ -25,7 +25,7 @@ TEST( TestAbsoluteDifference, TestSigned ) {
 
 TEST( TestAbsoluteDifference, TestZero ) {
   srand( time( nullptr ) );
-  int signed_value = tcc::algorithm::abs( rand() );
+  int signed_value = geometricks::algorithm::abs( rand() );
   EXPECT_EQ( absolute_difference( signed_value, 0 ), ( unsigned ) signed_value );
   EXPECT_EQ( absolute_difference( 0, 0 ), 0u );
   EXPECT_EQ( absolute_difference( 0, signed_value ), ( unsigned ) signed_value );

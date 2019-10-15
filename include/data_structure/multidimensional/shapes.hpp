@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP
 
 //C++ stblib includes
 #include <iostream>
@@ -8,7 +8,7 @@
 #include "meta/utils.hpp"
 #include "algorithm/absolute_difference.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -104,4 +104,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_SHAPES_HPP

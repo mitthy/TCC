@@ -1,5 +1,5 @@
-#ifndef TCC_FUNCTIONAL_OPTIONAL_HPP
-#define TCC_FUNCTIONAL_OPTIONAL_HPP
+#ifndef GEOMETRICKS_FUNCTIONAL_OPTIONAL_HPP
+#define GEOMETRICKS_FUNCTIONAL_OPTIONAL_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -12,7 +12,7 @@
 #include "meta/list.hpp"
 #include "meta/conditional_constructors.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace functional {
 
@@ -387,4 +387,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_FUNCTIONAL_OPTIONAL_HPP

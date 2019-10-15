@@ -1,6 +1,6 @@
-#ifndef TCC_DATA_STRUCTURE_HPP
-#define TCC_DATA_STRUCTURE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_HPP
 
 #include "data_structure/all.hpp"
 
-#endif
+#endif //GEOMETRICKS_DATA_STRUCTURE_HPP

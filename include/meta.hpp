@@ -1,6 +1,6 @@
-#ifndef TCC_META_HPP
-#define TCC_META_HPP
+#ifndef GEOMETRICKS_META_HPP
+#define GEOMETRICKS_META_HPP
 
 #include "meta/all.hpp"
 
-#endif
+#endif //GEOMETRICKS_META_HPP

@@ -1,6 +1,6 @@
 add_subdirectory( primitives )
 add_subdirectory( multidimensional )
 add_executable( TestBitmappedVectorTrie test_bitmapped_vector_trie.cpp )
-target_link_libraries( TestBitmappedVectorTrie gtest gmock gtest_main TCCDataStructure )
+target_link_libraries( TestBitmappedVectorTrie gtest gmock gtest_main GeometricksDataStructure )
 target_compile_options( TestBitmappedVectorTrie PRIVATE -Werror -Wall -Wextra )
 gtest_discover_tests( TestBitmappedVectorTrie COMMAND TestBitmappedVectorTrie )

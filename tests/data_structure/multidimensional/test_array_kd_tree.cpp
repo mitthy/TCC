@@ -4,7 +4,7 @@
 #include <tuple>
 
 template< typename T >
-using kd_tree = tcc::data_structure::array_kd_tree<T>;
+using kd_tree = geometricks::data_structure::array_kd_tree<T>;
 
 TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
   std::vector<std::tuple<int, int, int>> input_vector;

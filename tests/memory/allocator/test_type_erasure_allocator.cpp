@@ -2,7 +2,7 @@
 #include "memory/allocator/type_erased_allocator.hpp"
 
 TEST( TestTypeErasedAllocator, TestEmptyCreation ) {
-  tcc::memory::type_erased_allocator empty{};
+  geometricks::memory::type_erased_allocator empty{};
   int* ptr = nullptr;
   int* before = ptr;
   ptr = static_cast<int*>( allocate( empty, sizeof( int ) ) );

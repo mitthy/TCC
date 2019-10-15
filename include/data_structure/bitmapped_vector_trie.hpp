@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_BITMAPPED_VECTOR_TRIE_HPP
-#define TCC_DATA_STRUCTURE_BITMAPPED_VECTOR_TRIE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_BITMAPPED_VECTOR_TRIE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_BITMAPPED_VECTOR_TRIE_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -13,7 +13,7 @@
 #include "memory/allocator/malloc_allocator.hpp"
 #include "functional/optional.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -21,7 +21,7 @@ namespace tcc {
     struct OptionalPolicy {
     };
 
-    template< typename T, size_t NodeSize = 32, typename Policy = OptionalPolicy<T, NodeSize>, typename Allocator = tcc::memory::malloc_allocator_t >
+    template< typename T, size_t NodeSize = 32, typename Policy = OptionalPolicy<T, NodeSize>, typename Allocator = geometricks::memory::malloc_allocator_t >
     struct bitmapped_vector_trie {
 
       //Size must be a power of 2 so that we can efficiently calculate the index.
@@ -31,7 +31,7 @@ namespace tcc {
 
     private:
 
-      static constexpr uint8_t MaskStep = utils::log2( NodeSize );
+      static constexpr uint8_t MaskStep = geometricks::algorithm::utils::log2( NodeSize );
 
       static constexpr size_t Mask = NodeSize - 1;
 
@@ -169,4 +169,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_DATA_STRUCTURE_BITMAPPED_VECTOR_TRIE_HPP

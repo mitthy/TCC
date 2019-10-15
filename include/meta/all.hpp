@@ -1,5 +1,5 @@
-#ifndef TCC_META_ALL_HPP
-#define TCC_META_ALL_HPP
+#ifndef GEOMETRICKS_META_ALL_HPP
+#define GEOMETRICKS_META_ALL_HPP
 
 //Project includes
 #include "detect.hpp"
@@ -8,4 +8,4 @@
 #include "utils.hpp"
 #include "conditional_constructors.hpp"
 
-#endif
+#endif //GEOMETRICKS_META_ALL_HPP

@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.10 )
-project( TCC VERSION 0.0.0
-            DESCRIPTION "Advanced data structures library I'm creating for my undergraduate thesis."
+project( Geometricks VERSION 0.0.0
+            DESCRIPTION "Geometric data structures header only library for C++."
           LANGUAGES CXX )
 
 #Got this idea from EnTT project...
@@ -10,17 +10,16 @@ if( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
 endif()
 
 if( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE Debug )
+  set( CMAKE_BUILD_TYPE Debug )
 endif()
 
-option( BUILD_TCC_DOCS "Enable building with documentation." ON )
+option( BUILD_GEOMETRICKS_DOCS "Enable building with documentation." ON )
 
-if( BUILD_TCC_DOCS )
-    find_package( Doxygen 1.8 )
-
-    if( DOXYGEN_FOUND )
-        add_subdirectory( docs )
-    endif()
+if( BUILD_GEOMETRICKS_DOCS )
+  find_package( Doxygen 1.8 )
+  if( DOXYGEN_FOUND )
+    add_subdirectory( docs )
+  endif()
 endif()
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
@@ -28,8 +27,8 @@ list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake )
 include( CTest )
 include( GoogleTest )
 
-add_library( TCCMetaProgramming INTERFACE )
-set( TCC_META_HEADER_FILES
+add_library( GeometricksMetaProgramming INTERFACE )
+set( GEOMETRICKS_META_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/conditional_constructors.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/detect.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/list.hpp
@@ -38,12 +37,12 @@ set( TCC_META_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/utils.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meta.hpp
 )
-target_sources( TCCMetaProgramming INTERFACE ${TCC_META_HEADER_FILES} )
-target_include_directories( TCCMetaProgramming INTERFACE include/ )
-target_compile_features( TCCMetaProgramming INTERFACE cxx_std_17 )
+target_sources( GeometricksMetaProgramming INTERFACE ${GEOMETRICKS_META_HEADER_FILES} )
+target_include_directories( GeometricksMetaProgramming INTERFACE include/ )
+target_compile_features( GeometricksMetaProgramming INTERFACE cxx_std_17 )
 
-add_library( TCCMemory INTERFACE )
-set( TCC_MEMORY_HEADER_FILES
+add_library( GeometricksMemory INTERFACE )
+set( GEOMETRICKS_MEMORY_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/reference_count.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator/malloc_allocator.hpp
@@ -51,23 +50,22 @@ set( TCC_MEMORY_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator/type_erased_allocator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/memory.hpp
 )
-target_sources( TCCMemory INTERFACE ${TCC_MEMORY_HEADER_FILES} )
-target_include_directories( TCCMemory INTERFACE include/ )
-target_compile_features( TCCMemory INTERFACE cxx_std_17 )
+target_sources( GeometricksMemory INTERFACE ${GEOMETRICKS_MEMORY_HEADER_FILES} )
+target_include_directories( GeometricksMemory INTERFACE include/ )
+target_compile_features( GeometricksMemory INTERFACE cxx_std_17 )
 
-add_library( TCCFunctional INTERFACE )
-set( TCC_FUNCTIONAL_HEADER_FILES
+add_library( GeometricksFunctional INTERFACE )
+set( GEOMETRICKS_FUNCTIONAL_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/functional/optional.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/functional.hpp
 )
-target_sources( TCCFunctional INTERFACE ${TCC_FUNCTIONAL_HEADER_FILES} )
-target_include_directories( TCCFunctional INTERFACE include/ )
-target_compile_features( TCCFunctional INTERFACE cxx_std_17 )
-target_link_libraries( TCCFunctional INTERFACE TCCMetaProgramming )
+target_sources( GeometricksFunctional INTERFACE ${GEOMETRICKS_FUNCTIONAL_HEADER_FILES} )
+target_include_directories( GeometricksFunctional INTERFACE include/ )
+target_compile_features( GeometricksFunctional INTERFACE cxx_std_17 )
+target_link_libraries( GeometricksFunctional INTERFACE GeometricksMetaProgramming )
 
-add_library( TCCAlgorithm INTERFACE )
-set( TCC_ALGORITHM_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/distance.hpp
+add_library( GeometricksAlgorithm INTERFACE )
+set( GEOMETRICKS_ALGORITHM_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/mean.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/partition.hpp
@@ -75,12 +73,12 @@ set( TCC_ALGORITHM_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm.hpp
 )
-target_sources( TCCAlgorithm INTERFACE ${TCC_ALGORITHM_HEADER_FILES} )
-target_include_directories( TCCAlgorithm INTERFACE include/ )
-target_compile_features( TCCAlgorithm INTERFACE cxx_std_17 )
+target_sources( GeometricksAlgorithm INTERFACE ${GEOMETRICKS_ALGORITHM_HEADER_FILES} )
+target_include_directories( GeometricksAlgorithm INTERFACE include/ )
+target_compile_features( GeometricksAlgorithm INTERFACE cxx_std_17 )
 
-add_library( TCCDataStructure INTERFACE )
-set( TCC_DATA_STRUCTURE_HEADER_FILES
+add_library( GeometricksDataStructure INTERFACE )
+set( GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/functional_bitmapped_vector_trie.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/dimensional_traits.hpp
@@ -93,13 +91,13 @@ set( TCC_DATA_STRUCTURE_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure.hpp
 )
-target_sources( TCCDataStructure INTERFACE ${TCC_DATA_STRUCTURE_HEADER_FILES} )
-target_include_directories( TCCDataStructure INTERFACE include/ )
-target_compile_features( TCCDataStructure INTERFACE cxx_std_17 )
-target_link_libraries( TCCDataStructure INTERFACE TCCAlgorithm TCCMetaProgramming TCCFunctional )
+target_sources( GeometricksDataStructure INTERFACE ${GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES} )
+target_include_directories( GeometricksDataStructure INTERFACE include/ )
+target_compile_features( GeometricksDataStructure INTERFACE cxx_std_17 )
+target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming GeometricksFunctional )
 
-option( BUILD_TCC_TESTS "Build tests for thesis" OFF )
-if( ${BUILD_TCC_TESTS} OR ( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME ) )
+option( BUILD_GEOMETRICKS_TESTS "Build tests for Geometricks" OFF )
+if( ${BUILD_GEOMETRICKS_TESTS} OR ( ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} ) )
   enable_testing()
   add_definitions(-DTEST_ENABLED)
   add_subdirectory(tests)

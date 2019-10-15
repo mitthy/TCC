@@ -1,9 +1,9 @@
-#ifndef TCC_META_CONDITIONAL_CONSTRUCTORS_HPP
-#define TCC_META_CONDITIONAL_CONSTRUCTORS_HPP
+#ifndef GEOMETRICKS_META_CONDITIONAL_CONSTRUCTORS_HPP
+#define GEOMETRICKS_META_CONDITIONAL_CONSTRUCTORS_HPP
 
 //TODO: See if this is all working...
 
-namespace tcc {
+namespace geometricks {
 
   namespace meta {
 
@@ -100,4 +100,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_META_CONDITIONAL_CONSTRUCTORS_HPP

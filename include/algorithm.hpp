@@ -1,6 +1,6 @@
-#ifndef TCC_ALGORITHM_HPP
-#define TCC_ALGORITHM_HPP
+#ifndef GEOMETRICKS_ALGORITHM_HPP
+#define GEOMETRICKS_ALGORITHM_HPP
 
 #include "algorithm/all.hpp"
 
-#endif
+#endif //GEOMETRICKS_ALGORITHM_HPP

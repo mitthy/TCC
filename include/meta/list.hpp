@@ -1,5 +1,5 @@
-#ifndef TCC_META_LIST_HPP
-#define TCC_META_LIST_HPP
+#ifndef GEOMETRICKS_META_LIST_HPP
+#define GEOMETRICKS_META_LIST_HPP
 
 //C stdlib includes
 #include <stddef.h>
@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <tuple>
 
-namespace tcc {
+namespace geometricks {
 
   namespace meta {
 
@@ -47,4 +47,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_META_LIST_HPP

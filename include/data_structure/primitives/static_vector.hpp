@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
-#define TCC_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <memory>
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -140,4 +140,4 @@ public:
 
 }
 
-#endif
+#endif //GEOMETRICKS_DATA_STRUCTURE_PRIMITIVES_STATIC_VECTOR_HPP

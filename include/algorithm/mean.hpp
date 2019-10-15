@@ -1,13 +1,13 @@
-#ifndef TCC_DATA_STRUCTURE_UTILS_MEAN_HPP
-#define TCC_DATA_STRUCTURE_UTILS_MEAN_HPP
+#ifndef GEOMETRICKS_ALGORITHM_MEAN_HPP
+#define GEOMETRICKS_ALGORITHM_MEAN_HPP
 
 //C++ stdlib includes
 #include <numeric>
 
-//Project includes
-#include "distance.hpp"
+//C++ stdlib includes
+#include <algorithm>
 
-namespace tcc {
+namespace geometricks {
 
   namespace algorithm {
 
@@ -36,7 +36,7 @@ namespace tcc {
 
       template< typename Iterator, typename Sentinel >
       T operator()( Iterator first, Sentinel last ) const {
-        auto size = distance( first, last );
+        auto size = std::distance( first, last );
         auto init = mean_traits<T>::zero();
         init = std::accumulate( first, last, std::move( init ), m_function );
         return init / size;
@@ -46,6 +46,6 @@ namespace tcc {
 
   }  //namespace algorithm
 
-}  //namespace tcc
+}  //namespace geometricks
 
-#endif
+#endif //GEOMETRICKS_ALGORITHM_MEAN_HPP

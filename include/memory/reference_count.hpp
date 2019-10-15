@@ -1,5 +1,5 @@
-#ifndef TCC_MEMORY_REFERENCE_COUNT_HPP
-#define TCC_MEMORY_REFERENCE_COUNT_HPP
+#ifndef GEOMETRICKS_MEMORY_REFERENCE_COUNT_HPP
+#define GEOMETRICKS_MEMORY_REFERENCE_COUNT_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -7,7 +7,7 @@
 //Project includes
 #include "allocator.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace memory {
 
@@ -50,4 +50,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_MEMORY_REFERENCE_COUNT_HPP

@@ -1,6 +1,6 @@
-#ifndef TCC_FUNCTIONAL_HPP
-#define TCC_FUNCTIONAL_HPP
+#ifndef GEOMETRICKS_FUNCTIONAL_HPP
+#define GEOMETRICKS_FUNCTIONAL_HPP
 
 #include "functional/all.hpp"
 
-#endif
+#endif //GEOMETRICKS_FUNCTIONAL_HPP

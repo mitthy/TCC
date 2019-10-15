@@ -1,10 +1,10 @@
-#ifndef TCC_MEMORY_ALLOCATOR_TYPE_ERASED_ALLOCATOR_HPP
-#define TCC_MEMORY_ALLOCATOR_TYPE_ERASED_ALLOCATOR_HPP
+#ifndef GEOMETRICKS_MEMORY_ALLOCATOR_TYPE_ERASED_ALLOCATOR_HPP
+#define GEOMETRICKS_MEMORY_ALLOCATOR_TYPE_ERASED_ALLOCATOR_HPP
 
 #include <type_traits>
 #include "malloc_allocator.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace memory {
 
@@ -91,4 +91,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_MEMORY_ALLOCATOR_TYPE_ERASED_ALLOCATOR_HPP

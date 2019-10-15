@@ -1,12 +1,12 @@
-#ifndef TCC_ALGORITHM_INTERNAL_PARTITION_HPP
-#define TCC_ALGORITHM_INTERNAL_PARTITION_HPP
+#ifndef GEOMETRICKS_ALGORITHM_PARTITION_HPP
+#define GEOMETRICKS_ALGORITHM_PARTITION_HPP
 
 //C++ stdlib includes
 #include <algorithm>
 
 //Reimplementation of std partition where std iter_swap is a customisation point to work with custom iterators provided by the library.
 
-namespace tcc {
+namespace geometricks {
 
   namespace algorithm {
 
@@ -30,4 +30,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_ALGORITHM_PARTITION_HPP

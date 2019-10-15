@@ -1,5 +1,5 @@
-#ifndef TCC_ALGORITHM_INTERNAL_ABSOLUTE_DIFFERENCE_HPP
-#define TCC_ALGORITHM_INTERNAL_ABSOLUTE_DIFFERENCE_HPP
+#ifndef GEOMETRICKS_ALGORITHM_ABSOLUTE_DIFFERENCE_HPP
+#define GEOMETRICKS_ALGORITHM_ABSOLUTE_DIFFERENCE_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -12,7 +12,7 @@
 //Project includes
 #include "meta/utils.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace algorithm {
 
@@ -129,6 +129,6 @@ namespace tcc {
 
   } //namespace algorithm
 
-} //namespace tcc
+} //namespace geometricks
 
-#endif
+#endif //GEOMETRICKS_ALGORITHM_ABSOLUTE_DIFFERENCE_HPP

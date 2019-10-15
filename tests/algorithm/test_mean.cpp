@@ -5,7 +5,7 @@
 TEST( TestMean, TestMeanFunction ) {
   std::vector<int> input_data;
   input_data.reserve( 9 );
-  tcc::algorithm::mean<int> mean_calculator;
+  geometricks::algorithm::mean<int> mean_calculator;
   for( int i = 1; i < 10; ++i ) {
     input_data.push_back( i );
   }

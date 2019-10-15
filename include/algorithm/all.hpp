@@ -1,10 +1,9 @@
-#ifndef TCC_ALGORITHM_ALGORITHM_HPP
-#define TCC_ALGORITHM_ALGORITHM_HPP
+#ifndef GEOMETRICKS_ALGORITHM_ALL_HPP
+#define GEOMETRICKS_ALGORITHM_ALL_HPP
 
-#include "distance.hpp"
 #include "mean.hpp"
 #include "partition.hpp"
 #include "log.h"
 #include "absolute_difference.hpp"
 
-#endif //TCC_ALGORITHM_ALGORITHM_HPP
+#endif //GEOMETRICKS_ALGORITHM_ALL_HPP

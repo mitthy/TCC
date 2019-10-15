@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -20,7 +20,7 @@
 #include "algorithm/partition.hpp"
 #include "dimensional_traits.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -148,7 +148,7 @@ namespace tcc {
           cont.insert( std::forward<T>( element ) );
         }
         else {
-          static_assert( tcc::meta::always_false<T> );
+          static_assert( geometricks::meta::always_false<T> );
         }
       }
 
@@ -337,7 +337,7 @@ namespace tcc {
                 typename Sentinel >
       node<Dimension>*
       __create_leaf_kd_tree__( InputIterator first, Sentinel last ) {
-        if( algorithm::distance( first, last ) == 1 ) {
+        if( std::distance( first, last ) == 1 ) {
           return __create_node__<Dimension>( *first );
         }
         else {
@@ -348,7 +348,7 @@ namespace tcc {
           auto partition_function = [&temp_function, split]( const auto& element ) {
             return temp_function( element, split );
           };
-          auto middle = tcc::algorithm::partition( begin, end, partition_function ).base();
+          auto middle = geometricks::algorithm::partition( begin, end, partition_function ).base();
           if( first == middle ) {
             middle = std::next( middle );
           }
@@ -446,6 +446,6 @@ namespace tcc {
 
   } //namespace data_structure
 
-} //namespace tcc
+} //namespace geometricks
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP

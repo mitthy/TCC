@@ -1,8 +1,8 @@
-#ifndef TCC_MEMORY_ALL_HPP
-#define TCC_MEMORY_ALL_HPP
+#ifndef GEOMETRICKS_MEMORY_ALL_HPP
+#define GEOMETRICKS_MEMORY_ALL_HPP
 
 #include "allocator.hpp"
 
 #include "reference_count.hpp"
 
-#endif
+#endif //GEOMETRICKS_MEMORY_ALL_HPP

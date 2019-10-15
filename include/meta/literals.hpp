@@ -1,10 +1,10 @@
-#ifndef TCC_META_LITERAL_HPP
-#define TCC_META_LITERAL_HPP
+#ifndef GEOMETRICKS_META_LITERAL_HPP
+#define GEOMETRICKS_META_LIST_HPP
 
 //C stdlib includes
 #include <stddef.h>
 
-namespace tcc {
+namespace geometricks {
   namespace meta {
 
     namespace literals {
@@ -39,4 +39,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_META_LIST_HPP

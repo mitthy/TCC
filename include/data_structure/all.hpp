@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_ALL_HPP
-#define TCC_DATA_STRUCTURE_ALL_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_ALL_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_ALL_HPP
 
 #include "bitmapped_vector_trie.hpp"
 
@@ -9,4 +9,4 @@
 
 #include "multidimensional/kd_tree.hpp"
 
-#endif
+#endif //GEOMETRICKS_DATA_STRUCTURE_ALL_HPP

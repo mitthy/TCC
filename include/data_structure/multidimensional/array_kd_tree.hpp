@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
 
 //C++ stdlib includes
 #include <functional>
@@ -8,10 +8,9 @@
 
 //Project includes
 #include "dimensional_traits.hpp"
-#include "algorithm/distance.hpp"
 #include "meta/utils.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -24,7 +23,7 @@ namespace tcc {
       //Constructor
 
       template< typename InputIterator, typename Sentinel >
-      array_kd_tree( InputIterator begin, Sentinel end ): m_size( algorithm::distance( begin, end ) ), m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
+      array_kd_tree( InputIterator begin, Sentinel end ): m_size( std::distance( begin, end ) ), m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
         __construct_array_kd_tree__<0>( begin, end, 0, m_size );
       }
 
@@ -223,4 +222,4 @@ namespace tcc {
 
 }
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "data_structure/multidimensional/shapes.hpp"
 
-using namespace tcc::data_structure;
+using namespace geometricks::data_structure;
 
 TEST( TestRectangle, TestIntersection ) {
   EXPECT_TRUE( intersects_with( rectangle{ 5, 2, 4, 10 }, rectangle{ 5, 2, 4, 10 } ) );

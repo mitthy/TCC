@@ -1,12 +1,12 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
 
 #include <utility>
 #include <tuple>
 #include "meta/utils.hpp"
 #include "algorithm/absolute_difference.hpp"
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -47,19 +47,19 @@ namespace tcc {
 
         template< int I, typename T >
         constexpr decltype( auto )
-        __get__( T&& value, tcc::meta::priority_tag<0> ) -> decltype( get<I>( std::forward<T>( value ) ) ) {
+        __get__( T&& value, geometricks::meta::priority_tag<0> ) -> decltype( get<I>( std::forward<T>( value ) ) ) {
           return get<I>( std::forward<T>( value ) );
         }
 
         template< int I, typename T >
         constexpr decltype( auto )
-        __get__( T&& value, tcc::meta::priority_tag<1> ) -> decltype( get( std::forward<T>( value ), dimension_v<I> ) ) {
+        __get__( T&& value, geometricks::meta::priority_tag<1> ) -> decltype( get( std::forward<T>( value ), dimension_v<I> ) ) {
           return get( std::forward<T>( value ), dimension_v<I> );
         }
 
         template< int I, typename T >
         constexpr decltype( auto )
-        __get__( T&& value, tcc::meta::priority_tag<2> ) -> decltype( get_customization::get<T>::template _<I>( std::forward<T>( value ) ) ) {
+        __get__( T&& value, geometricks::meta::priority_tag<2> ) -> decltype( get_customization::get<T>::template _<I>( std::forward<T>( value ) ) ) {
           return get_customization::get<T>::template _<I>( std::forward<T>( value ) );
         }
 
@@ -68,7 +68,7 @@ namespace tcc {
           template< typename T, int I >
           constexpr decltype( auto )
           operator() ( T&& value, dimension_t<I> ) const {
-            return __get__<I>( std::forward<T>( value ), tcc::meta::priority_tag<2>{} );
+            return __get__<I>( std::forward<T>( value ), geometricks::meta::priority_tag<2>{} );
           }
 
         };
@@ -122,6 +122,6 @@ namespace tcc {
 
   } //namespace data_structure
 
-} //namespace tcc
+} //namespace geometricks
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP

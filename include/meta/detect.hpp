@@ -1,10 +1,10 @@
-#ifndef TCC_META_DETECT_HPP
-#define TCC_META_DETECT_HPP
+#ifndef GEOMETRICKS_META_DETECT_HPP
+#define GEOMETRICKS_META_DETECT_HPP
 
 //C++ stdlib includes
 #include <type_traits>
 
-namespace tcc {
+namespace geometricks {
 
   namespace meta {
 
@@ -38,4 +38,4 @@ namespace tcc {
 
 }
 
-#endif
+#endif //GEOMETRICKS_META_DETECT_HPP

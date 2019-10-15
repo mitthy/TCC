@@ -1,6 +1,6 @@
-#ifndef TCC_MEMORY_HPP
-#define TCC_MEMORY_HPP
+#ifndef GEOMETRICKS_MEMORY_HPP
+#define GEOMETRICKS_MEMORY_HPP
 
 #include "memory/all.hpp"
 
-#endif
+#endif //GEOMETRICKS_MEMORY_HPP

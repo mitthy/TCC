@@ -7,7 +7,7 @@ struct element_t {
   int x, y, hw, hh;
 };
 
-namespace tcc {
+namespace geometricks {
 
   namespace data_structure {
 
@@ -16,7 +16,7 @@ namespace tcc {
       template<>
       struct make_rectangle<element_t> {
 
-        static constexpr tcc::data_structure::rectangle
+        static constexpr geometricks::data_structure::rectangle
         _( const element_t& value ) {
           return { value.x, value.y, value.hw, value.hh };
         }
@@ -29,10 +29,10 @@ namespace tcc {
 
 }
 
-using quad_tree_t = tcc::data_structure::rect_quad_tree<std::tuple<int,int,int,int>>;
+using quad_tree_t = geometricks::data_structure::rect_quad_tree<std::tuple<int,int,int,int>>;
 
 TEST( TestQuadTree, TestCreation ) {
-  quad_tree_t tree{ tcc::data_structure::rectangle{ -1000, -1000, 2000, 2000 } };
+  quad_tree_t tree{ geometricks::data_structure::rectangle{ -1000, -1000, 2000, 2000 } };
   for( int i = 0; i < 256; ++i ) {
     tree.insert( std::make_tuple( ( i + 5 ) * 2, ( i + 5 ) * 2, 10, 10 ) );
   }

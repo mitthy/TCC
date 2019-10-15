@@ -1,6 +1,6 @@
 add_executable( TestMallocAllocator test_malloc_allocator.cpp )
-target_link_libraries( TestMallocAllocator gtest gmock gtest_main TCCMemory )
+target_link_libraries( TestMallocAllocator gtest gmock gtest_main GeometricksMemory )
 gtest_discover_tests( TestMallocAllocator COMMAND TestMallocAllocator )
 add_executable( TestTypeErasedAllocator test_type_erasure_allocator.cpp )
-target_link_libraries( TestTypeErasedAllocator gtest gmock gtest_main TCCMemory )
+target_link_libraries( TestTypeErasedAllocator gtest gmock gtest_main GeometricksMemory )
 gtest_discover_tests( TestTypeErasedAllocator COMMAND TestTypeErasedAllocator )
