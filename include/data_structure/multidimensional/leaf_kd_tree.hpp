@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_KD_TREE_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_KD_TREE_HPP
+#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
+#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP
 
 //C stdlib includes
 #include <stdint.h>
@@ -14,10 +14,8 @@
 #include <vector>
 
 //Project includes
-#include "memory/allocator/malloc_allocator.hpp"
 #include "meta/detect.hpp"
 #include "meta/utils.hpp"
-#include "algorithm/absolute_difference.hpp"
 #include "algorithm/mean.hpp"
 #include "algorithm/partition.hpp"
 #include "dimensional_traits.hpp"
@@ -178,15 +176,82 @@ namespace tcc {
 
     template< typename T,
               typename SplitFunction = mean_split_function,
-              typename CompareFunction = less_compare_function,
-              typename Allocator = tcc::memory::malloc_allocator_t >
-    struct kd_tree {
+              typename CompareFunction = less_compare_function >
+    struct leaf_kd_tree {
 
-      static_assert( std::is_same_v<T, std::decay_t<T>>, "Can only create kd_tree of a value type." );
+      static_assert( std::is_same_v<T, std::decay_t<T>>, "Can only create leaf_kd_tree of a value type." );
 
       using Traits = dimensional_traits<T>;
 
+
+    public:
+
+      //Constructors
+
+      template< typename InputIterator,
+                typename Sentinel >
+      leaf_kd_tree( InputIterator first, Sentinel last ): m_compare{},
+                                                          m_split{},
+                                                          m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
+              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
+                                                                                    //Otherwise we would need a work around conversion.
+      }
+
+      template< typename InputIterator,
+                typename Sentinel >
+      leaf_kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{} ): m_compare( compare ),
+                                                                                                                          m_split( split ),
+                                                                                                                          m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
+              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
+                                                                                    //Otherwise we would need a work around conversion.
+      }
+
+      //Copy constructors
+
+      leaf_kd_tree( const leaf_kd_tree& rhs ) {
+        struct dummy {};
+        static_assert( meta::always_false<dummy>, "TODO: Not implemented yet." );
+      }
+
+      leaf_kd_tree( leaf_kd_tree&& rhs ): m_compare( rhs.m_compare ),
+                                          m_split( rhs.m_split ),
+                                          m_head( rhs.m_head ) {
+        rhs.m_head = nullptr;
+      }
+
+      //Destructor
+
+      ~leaf_kd_tree() {
+        if( m_head  ) __remove_node__( m_head );
+      }
+
+      template< typename DistanceFunction = default_nearest_neighbour_function >
+      decltype( auto )
+      nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
+        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
+        T* ret = nullptr;
+        auto best_distance = meta::numeric_limits<distance_t>::max();
+        __nearest_neighbor_impl__( point, m_head, &ret, best_distance, f );
+        return std::pair<const T&, distance_t>( *ret, best_distance );
+      }
+
+      template< typename DistanceFunction = default_nearest_neighbour_function,
+                typename Collection >
+      Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
+        //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
+        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
+        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
+        std::vector<std::pair<T*, distance_t>> max_heap;
+        max_heap.reserve( K + 1 );
+        __k_nearest_neighbor_impl__( point, m_head, K, max_heap, f );
+        for( auto& element: max_heap ) {
+          __detail__::add_element( std::make_pair( *element.first, element.second ), output );
+        }
+        return output;
+      }
+
     private:
+
       static constexpr int Dimensions = Traits::dimensions;
 
       static_assert( Dimensions > 0 );
@@ -194,7 +259,7 @@ namespace tcc {
       template< int NodeDimension >
       struct node {
 
-        friend class kd_tree;
+        friend class leaf_kd_tree;
 
         using child_t = node< NodeDimension + 1 == Dimensions ? 0 : NodeDimension + 1 >;
 
@@ -212,13 +277,13 @@ namespace tcc {
                 typename Type,
                 typename... Args >
       node<NodeDimension>*
-      create_node( Type&& object, Args&&... args ) {
+      __create_node__( Type&& object, Args&&... args ) {
         using actual_t = std::decay_t<Type>;
         struct alloc_type {
           std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
           std::aligned_storage_t<sizeof( actual_t ), alignof( actual_t )> m_storage;
         };
-        alloc_type* raw_memory = static_cast<alloc_type*>( allocate( *m_allocator, sizeof( alloc_type ), alignof( alloc_type ) ) );
+        alloc_type* raw_memory = static_cast<alloc_type*>( ::operator new( sizeof( alloc_type ) ) );
         new ( &raw_memory->m_node ) node<NodeDimension>{ std::forward<Args>( args )... };
         new ( &raw_memory->m_storage ) actual_t{ std::forward<Type>( object ) };
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
@@ -230,8 +295,6 @@ namespace tcc {
       __get__( U&& el ) {
         return dimension::get( std::forward<U>( el ), dimension_t<I>{} );
       }
-
-      Allocator* m_allocator;
 
       CompareFunction m_compare;
 
@@ -250,7 +313,7 @@ namespace tcc {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( T ), alignof( T )> m_storage;
           };
-          deallocate( *m_allocator, static_cast<void*>( to_delete ), alignof( alloc_type_leaf ) );
+          ::operator delete( to_delete );
         }
         else {
           maybe_actual_t* middle = __get_element__<maybe_actual_t>( to_delete );
@@ -265,7 +328,7 @@ namespace tcc {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( maybe_actual_t ), alignof( maybe_actual_t )> m_storage;
           };
-          deallocate( *m_allocator, static_cast<void*>( to_delete ), alignof( alloc_type_root ) );
+          ::operator delete( to_delete );
         }
       }
 
@@ -273,9 +336,9 @@ namespace tcc {
                 typename InputIterator,
                 typename Sentinel >
       node<Dimension>*
-      create_kd_tree( InputIterator first, Sentinel last ) {
+      __create_leaf_kd_tree__( InputIterator first, Sentinel last ) {
         if( algorithm::distance( first, last ) == 1 ) {
-          return create_node<Dimension>( *first );
+          return __create_node__<Dimension>( *first );
         }
         else {
           auto begin = __detail__::dimensional_iterator<InputIterator, Dimension>( first );
@@ -289,16 +352,16 @@ namespace tcc {
           if( first == middle ) {
             middle = std::next( middle );
           }
-          auto* left = create_kd_tree<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( first, middle );
-          auto* right = create_kd_tree<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( middle, last );
-          return create_node<Dimension>( split, left, right );
+          auto* left = __create_leaf_kd_tree__<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( first, middle );
+          auto* right = __create_leaf_kd_tree__<Dimension + 1 == Dimensions ? 0 : Dimension + 1>( middle, last );
+          return __create_node__<Dimension>( split, left, right );
         }
       }
 
       template< int I,
                 typename DistanceFunction >
       void
-      nearest_neighbor_impl( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const noexcept {
+      __nearest_neighbor_impl__( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const noexcept {
         using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           //Leaf case. Check if the current node is a better match.
@@ -312,15 +375,15 @@ namespace tcc {
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
           if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
-            nearest_neighbor_impl( value, node->m_left, best, best_distance, f );
+            __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f );
             if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
-              nearest_neighbor_impl( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
+              __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
           else {
-            nearest_neighbor_impl( value, node->m_right, best, best_distance, f );
+            __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f );
             if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
-              nearest_neighbor_impl( value, node->m_left, best, best_distance, f ); //There might be a better candidate on the other side.
+              __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
         }
@@ -332,11 +395,12 @@ namespace tcc {
           return lhs.second < rhs.second;
         }
       };
+
       template< int I,
                 typename DistanceFunction,
                 typename DistanceType >
       void
-      k_nearest_neighbor_impl( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
+      __k_nearest_neighbor_impl__( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
         using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           T* stored = __get_element__<T>( node );
@@ -352,15 +416,15 @@ namespace tcc {
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
           if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
-            k_nearest_neighbor_impl( value, node->m_left, K, max_heap, f );
+            __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f );
             if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
-              k_nearest_neighbor_impl( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
+              __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }
           else {
-            k_nearest_neighbor_impl( value, node->m_right, K, max_heap, f );
+            __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f );
             if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
-              k_nearest_neighbor_impl( value, node->m_left, K, max_heap, f ); //There might be a better candidate on the other side.
+              __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }
         }
@@ -378,90 +442,10 @@ namespace tcc {
         return reinterpret_cast<StoredType*>( &retriever->m_actual );
       }
 
-    public:
-
-      //Constructors
-
-      template< typename InputIterator,
-                typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last, Allocator* allocator ):
-            m_allocator( allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
-              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
-                                                                                    //Otherwise we would need a work around conversion.
-      }
-
-      template< typename InputIterator,
-                typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last ):
-            m_allocator( &memory::malloc_allocator ), m_compare{}, m_split{}, m_head( create_kd_tree<0>( first, last ) ) {
-              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
-                                                                                    //Otherwise we would need a work around conversion.
-              static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
-      }
-
-      template< typename InputIterator,
-                typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split, Allocator* allocator ):
-            m_allocator( allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
-              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
-                                                                                    //Otherwise we would need a work around conversion.
-      }
-
-      template< typename InputIterator,
-                typename Sentinel >
-      kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{} ):
-            m_allocator( &memory::malloc_allocator ), m_compare( compare ), m_split( split ), m_head( create_kd_tree<0>( first, last ) ) {
-              static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
-                                                                                    //Otherwise we would need a work around conversion.
-            static_assert( std::is_same_v<Allocator, memory::malloc_allocator_t> );
-      }
-
-      //Copy constructors
-
-      kd_tree( const kd_tree& rhs ) {
-        struct dummy {};
-        static_assert( meta::always_false<dummy>, "TODO: Not implemented yet." );
-      }
-
-      kd_tree( kd_tree&& rhs ): m_allocator( rhs.m_allocator ), m_compare( rhs.m_compare ), m_split( rhs.m_split ), m_head( rhs.m_head ) {
-        rhs.m_head = nullptr;
-      }
-
-      //Destructor
-
-      ~kd_tree() {
-        if( m_head  ) __remove_node__( m_head );
-      }
-
-      template< typename DistanceFunction = default_nearest_neighbour_function >
-      decltype( auto )
-      nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
-        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
-        T* ret = nullptr;
-        auto best_distance = meta::numeric_limits<distance_t>::max();
-        nearest_neighbor_impl( point, m_head, &ret, best_distance, f );
-        return std::pair<const T&, distance_t>( *ret, best_distance );
-      }
-
-      template< typename DistanceFunction = default_nearest_neighbour_function,
-                typename Collection >
-      Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
-        //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
-        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
-        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
-        std::vector<std::pair<T*, distance_t>> max_heap;
-        max_heap.reserve( K + 1 );
-        k_nearest_neighbor_impl( point, m_head, K, max_heap, f );
-        for( auto& element: max_heap ) {
-          __detail__::add_element( std::make_pair( *element.first, element.second ), output );
-        }
-        return output;
-      }
-
     };
 
   } //namespace data_structure
 
 } //namespace tcc
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_KD_TREE_HPP
+#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_LEAF_KD_TREE_HPP

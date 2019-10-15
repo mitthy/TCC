@@ -1,5 +1,5 @@
-#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_COMPACT_KD_TREE_HPP
-#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_COMPACT_KD_TREE_HPP
+#ifndef TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#define TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
 
 //C++ stdlib includes
 #include <functional>
@@ -17,13 +17,59 @@ namespace tcc {
 
     template< typename T,
               typename Compare = std::less<> >
-    struct compact_kd_tree : Compare {
+    struct array_kd_tree : Compare {
 
       //TODO: static assert on compare so we know it can sort in all dimensions.
 
+      //Constructor
+
       template< typename InputIterator, typename Sentinel >
-      compact_kd_tree( InputIterator begin, Sentinel end ): m_size( algorithm::distance( begin, end ) ), m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
-        __construct_kd_tree__<0>( begin, end, 0, m_size );
+      array_kd_tree( InputIterator begin, Sentinel end ): m_size( algorithm::distance( begin, end ) ), m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
+        __construct_array_kd_tree__<0>( begin, end, 0, m_size );
+      }
+
+      //Copy constructor
+
+      array_kd_tree( const array_kd_tree& rhs ):  m_size( rhs.m_size ),
+                                                  m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
+        std::copy( rhs.m_data_array, rhs.m_data_array + m_size, m_data_array );
+      }
+
+      //Move constructor
+
+      array_kd_tree( array_kd_tree&& rhs ): m_size( rhs.m_size ),
+                                            m_data_array( rhs.m_data_array ) {
+        rhs.m_data_array = nullptr;
+      }
+
+      //Copy assignment
+
+      array_kd_tree& operator=( const array_kd_tree& rhs ) {
+        if( &rhs != this ) {
+          //TODO: optimize to only allocate new buffer in case old capacity wasn't enough.
+          //TODO: exception guarantee.
+          T* new_buff = ( T* ) ::operator new( sizeof( T ) * rhs.m_size );
+          std::copy( rhs.m_data_array, rhs.m_data_array + rhs.m_size, new_buff );
+          __destroy__();
+          m_data_array = new_buff;
+          m_size = rhs.m_size;
+        }
+        return *this;
+      }
+
+      //Move assignment
+
+      array_kd_tree& operator=( array_kd_tree&& rhs ) {
+        if( &rhs != this ) {
+          m_data_array = rhs.m_data_array;
+          m_size = rhs.m_size;
+          rhs.m_data_array = nullptr;
+        }
+        return *this;
+      }
+
+      ~array_kd_tree() {
+        __destroy__();
       }
 
       template< typename DistanceFunction = default_nearest_neighbour_function >
@@ -36,14 +82,11 @@ namespace tcc {
         return std::pair<const T&, distance_t>( *closest, best );
       }
 
-      ~compact_kd_tree() {
-        for( int32_t i = 0; i < m_size; ++i ) {
-          m_data_array[ i ].~T();
-        }
-        ::operator delete( m_data_array );
-      }
-
     private:
+
+      int32_t m_size;
+
+      T* m_data_array;
 
       struct node_t {
         int32_t m_index;
@@ -52,6 +95,14 @@ namespace tcc {
           return m_block_size;
         }
       };
+
+      void
+      __destroy__() {
+        for( int32_t i = 0; i < m_size; ++i ) {
+          m_data_array[ i ].~T();
+        }
+        ::operator delete( m_data_array );
+      }
 
       template< int Dimension, typename DistanceFunction, typename DistanceType >
       void
@@ -114,7 +165,7 @@ namespace tcc {
 
       template< int Dimension, typename InputIterator, typename Sentinel >
       void
-      __construct_kd_tree__( InputIterator begin, Sentinel end, int32_t startind_index, int32_t blocksize ) {
+      __construct_array_kd_tree__( InputIterator begin, Sentinel end, int32_t startind_index, int32_t blocksize ) {
         if( begin != end ) {
           constexpr size_t NextDimension = ( Dimension + 1 ) % dimensional_traits<T>::dimensions;
           auto middle = begin;
@@ -127,9 +178,9 @@ namespace tcc {
           };
           std::nth_element( begin, middle ,end, less_function );
           new ( &m_data_array[ insert_index ] ) T{ *middle };
-          __construct_kd_tree__<NextDimension>( begin, middle, startind_index, step );
+          __construct_array_kd_tree__<NextDimension>( begin, middle, startind_index, step );
           std::advance( middle, 1 );
-          __construct_kd_tree__<NextDimension>( middle, end, insert_index + 1, blocksize - step - 1 );
+          __construct_array_kd_tree__<NextDimension>( middle, end, insert_index + 1, blocksize - step - 1 );
         }
       }
 
@@ -138,10 +189,6 @@ namespace tcc {
       __compare__( const _T& first, const _T& second ) const {
         return Compare::operator()( first, second );
       }
-
-      int32_t m_size;
-
-      T* m_data_array;
 
       node_t
       __root__() const {
@@ -176,4 +223,4 @@ namespace tcc {
 
 }
 
-#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_COMPACT_KD_TREE_HPP
+#endif //TCC_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
