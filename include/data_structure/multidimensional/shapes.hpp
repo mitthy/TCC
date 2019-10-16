@@ -6,7 +6,6 @@
 
 //Project includes
 #include "meta/utils.hpp"
-#include "algorithm/absolute_difference.hpp"
 
 namespace geometricks {
 

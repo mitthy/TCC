@@ -70,6 +70,7 @@ set( GEOMETRICKS_ALGORITHM_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/partition.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/absolute_difference.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/iter_swap.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm.hpp
 )

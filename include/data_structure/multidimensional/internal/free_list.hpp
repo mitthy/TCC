@@ -14,6 +14,11 @@ namespace geometricks {
 
   namespace data_structure {
 
+    /**
+    * @cond EXCLUDE_DOXYGEN
+    *
+    * Internal not to be documented
+    */
     namespace __detail__ {
 
       template< typename POD >
@@ -139,6 +144,9 @@ namespace geometricks {
       };
 
     }
+    /**
+    * @endcond
+    */
 
   }
 

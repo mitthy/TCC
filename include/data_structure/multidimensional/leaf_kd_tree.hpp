@@ -48,7 +48,7 @@ namespace geometricks {
 
         auto
         operator*() {
-          return dimension::get( *m_iterator, dimension_v<Dimension> );
+          return dimension::get( *m_iterator, dimension::dimension_v<Dimension> );
         }
 
         dimensional_iterator&
@@ -159,8 +159,7 @@ namespace geometricks {
       template< typename Iterator, typename Sentinel >
       auto
       operator()( Iterator first, Sentinel last ) const {
-        algorithm::mean< typename std::iterator_traits<Iterator>::value_type > mean_calculator{};
-        return mean_calculator( first, last );
+        return algorithm::mean( first, last );
       }
 
     };
@@ -181,7 +180,7 @@ namespace geometricks {
 
       static_assert( std::is_same_v<T, std::decay_t<T>>, "Can only create leaf_kd_tree of a value type." );
 
-      using Traits = dimensional_traits<T>;
+      using Traits = dimension::dimensional_traits<T>;
 
 
     public:
@@ -225,7 +224,7 @@ namespace geometricks {
         if( m_head  ) __remove_node__( m_head );
       }
 
-      template< typename DistanceFunction = default_nearest_neighbour_function >
+      template< typename DistanceFunction = dimension::default_nearest_neighbour_function >
       decltype( auto )
       nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
         using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
@@ -235,7 +234,7 @@ namespace geometricks {
         return std::pair<const T&, distance_t>( *ret, best_distance );
       }
 
-      template< typename DistanceFunction = default_nearest_neighbour_function,
+      template< typename DistanceFunction = dimension::default_nearest_neighbour_function,
                 typename Collection >
       Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
         //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
@@ -293,7 +292,7 @@ namespace geometricks {
                 typename U >
       static auto
       __get__( U&& el ) {
-        return dimension::get( std::forward<U>( el ), dimension_t<I>{} );
+        return dimension::get( std::forward<U>( el ), dimension::dimension_v<I> );
       }
 
       CompareFunction m_compare;
@@ -305,7 +304,7 @@ namespace geometricks {
       template< int NodeDimension >
       void
       __remove_node__( node<NodeDimension>* to_delete ) noexcept {
-        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<NodeDimension>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension::dimension_t<NodeDimension>>() ) )>;
         if( !to_delete->m_left && !to_delete->m_right ) {
           T* leaf = __get_element__<T>( to_delete );
           leaf->~T();
@@ -362,7 +361,7 @@ namespace geometricks {
                 typename DistanceFunction >
       void
       __nearest_neighbor_impl__( const T& value, node<I>* node, T** best, auto& best_distance, DistanceFunction f ) const noexcept {
-        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension::dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           //Leaf case. Check if the current node is a better match.
           T* stored = __get_element__<T>( node );
@@ -374,15 +373,15 @@ namespace geometricks {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
+          if( m_compare( dimension::get( value, dimension::dimension_v<I> ), stored_value ) ) {
             __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f );
-            if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+            if( f( value, stored_value, dimension::dimension_v<I> ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
               __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
           else {
             __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f );
-            if( f( value, stored_value, dimension_t<I>{} ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+            if( f( value, stored_value, dimension::dimension_v<I> ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
               __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
@@ -401,7 +400,7 @@ namespace geometricks {
                 typename DistanceType >
       void
       __k_nearest_neighbor_impl__( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
-        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension_t<I>>() ) )>;
+        using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension::dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
           T* stored = __get_element__<T>( node );
           auto calculated_distance = f( value, *stored );
@@ -415,15 +414,15 @@ namespace geometricks {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( dimension::get( value, dimension_t<I>{} ), stored_value ) ) {
+          if( m_compare( dimension::get( value, dimension::dimension_v<I> ), stored_value ) ) {
             __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f );
-            if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
+            if( max_heap.size() < K || f( value, stored_value, dimension::dimension_v<I> ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
               __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }
           else {
             __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f );
-            if( max_heap.size() < K || f( value, stored_value, dimension_t<I>{} ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
+            if( max_heap.size() < K || f( value, stored_value, dimension::dimension_v<I> ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
               __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }
