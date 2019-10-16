@@ -157,7 +157,7 @@ namespace geometricks {
             return ( this->operator()( lhs, rhs, dimension_v<I> ) + ... );
           }
         };
-        auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ), manhattan_distance_t{} );
+        auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ), manhattan_distance_t );
       * @endcode
       * @todo Add references.
       * @todo Add complexity.
