@@ -272,6 +272,37 @@ namespace geometricks {
 
       };
 
+      struct compare_t {
+
+        CompareFunction m_func;
+
+        template< typename U, int I >
+        constexpr bool
+        operator()( const T& lhs, const U& rhs, dimension::dimension_t<I> ) const {
+          if constexpr( __detail__::has_dimension_compare<CompareFunction, T, U, I> ) {
+            return m_func( lhs, rhs, dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<CompareFunction, dimension::type_at<T, I>, U, I> ) {
+            return m_func( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), rhs, dimension::dimension_v<I> );
+          }
+          else {
+            static_assert( __detail__::has_value_compare<CompareFunction, dimension::type_at<T, I>, U> );
+            return m_func( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), rhs );
+          }
+        }
+
+        constexpr compare_t(): m_func{} {}
+
+        constexpr compare_t( CompareFunction func ): m_func( func ) {}
+
+      };
+
+      compare_t m_compare;
+
+      SplitFunction m_split;
+
+      node<0>* m_head;
+
       template< int NodeDimension,
                 typename Type,
                 typename... Args >
@@ -294,12 +325,6 @@ namespace geometricks {
       __get__( U&& el ) {
         return dimension::get( std::forward<U>( el ), dimension::dimension_v<I> );
       }
-
-      CompareFunction m_compare;
-
-      SplitFunction m_split;
-
-      node<0>* m_head;
 
       template< int NodeDimension >
       void
@@ -345,9 +370,9 @@ namespace geometricks {
           auto split = m_split( begin, end );
           auto temp_function = m_compare;
           auto partition_function = [&temp_function, split]( const auto& element ) {
-            return temp_function( element, split );
+            return temp_function( element, split, dimension::dimension_v<Dimension> );
           };
-          auto middle = geometricks::algorithm::partition( begin, end, partition_function ).base();
+          auto middle = geometricks::algorithm::partition( first, last, partition_function );
           if( first == middle ) {
             middle = std::next( middle );
           }
@@ -373,15 +398,27 @@ namespace geometricks {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( dimension::get( value, dimension::dimension_v<I> ), stored_value ) ) {
+          auto dist_function = [ &f ]( auto&& lhs, auto&& rhs ) {
+            if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, maybe_actual_t, I> ) {
+              return f( std::forward<decltype( lhs )>( lhs ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+            }
+            else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, maybe_actual_t, I> ) {
+              return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+            }
+            else {
+              static_assert( __detail__::has_value_compare<DistanceFunction, dimension::type_at<T, I>, maybe_actual_t>, "Please supply a dimension compare, a value, value, dimension compare or a value compare." );
+              return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ) );
+            }
+          };
+          if( m_compare( value, stored_value, dimension::dimension_v<I> ) ) {
             __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f );
-            if( f( value, stored_value, dimension::dimension_v<I> ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+            if( dist_function( value, stored_value ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
               __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
           else {
             __nearest_neighbor_impl__( value, node->m_right, best, best_distance, f );
-            if( f( value, stored_value, dimension::dimension_v<I> ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
+            if( dist_function( value, stored_value ) < best_distance ) { //If the distance from current point to dividing point is less than the best distance
               __nearest_neighbor_impl__( value, node->m_left, best, best_distance, f ); //There might be a better candidate on the other side.
             }
           }
@@ -414,15 +451,27 @@ namespace geometricks {
         }
         else {
           maybe_actual_t& stored_value = *__get_element__<maybe_actual_t>( node );
-          if( m_compare( dimension::get( value, dimension::dimension_v<I> ), stored_value ) ) {
+          auto dist_function = [ &f ]( auto&& lhs, auto&& rhs ) {
+            if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, maybe_actual_t, I> ) {
+              return f( std::forward<decltype( lhs )>( lhs ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+            }
+            else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, maybe_actual_t, I> ) {
+              return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+            }
+            else {
+              static_assert( __detail__::has_value_compare<DistanceFunction, dimension::type_at<T, I>, maybe_actual_t>, "Please supply a dimension compare, a value, value, dimension compare or a value compare." );
+              return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ) );
+            }
+          };
+          if( m_compare( value, stored_value, dimension::dimension_v<I> ) ) {
             __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f );
-            if( max_heap.size() < K || f( value, stored_value, dimension::dimension_v<I> ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
+            if( max_heap.size() < K || dist_function( value, stored_value ) < max_heap.front().second ) { //If we need more points or the  split point is a better match
               __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }
           else {
             __k_nearest_neighbor_impl__( value, node->m_right, K, max_heap, f );
-            if( max_heap.size() < K || f( value, stored_value, dimension::dimension_v<I> ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
+            if( max_heap.size() < K || dist_function( value, stored_value ) < max_heap.front().second  ) { //If we need more points or the  split point is a better match
               __k_nearest_neighbor_impl__( value, node->m_left, K, max_heap, f ); //There might be a better candidate on the other side.
             }
           }

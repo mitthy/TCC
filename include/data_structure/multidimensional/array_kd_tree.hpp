@@ -180,11 +180,19 @@ namespace geometricks {
       T* m_data_array;
 
       struct node_t {
+
         int32_t m_index;
+
         int32_t m_block_size;
+
         operator bool() const {
           return m_block_size;
         }
+
+      };
+
+      struct compare_t {
+
       };
 
       void
@@ -202,6 +210,25 @@ namespace geometricks {
         auto compare_function = []( const T& left, const T& right ) {
           Compare comp{};
           return comp( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
+        };
+        auto distance_function = [ &f ]( auto&& lhs, auto&& rhs ) {
+          constexpr int I = Dimension;
+          if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, T, I> ) {
+            return f( std::forward<decltype( lhs )>( lhs ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, dimension::type_at<T, I>, I> ) {
+            return f( std::forward<decltype( lhs )>( lhs ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, T, I> ) {
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, dimension::type_at<T, I>, I> ) {
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ), dimension::dimension_v<I> );
+          }
+          else {
+            static_assert( __detail__::has_value_compare<DistanceFunction, dimension::type_at<T, I>, dimension::type_at<T, I>>, "Please supply a dimension compare, a value, value, dimension compare or a value compare." );
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ) );
+          }
         };
         if( compare_function( point, m_data_array[ cur_node.m_index ] ) ) {
           //The point is to the left of the current axis.
@@ -221,7 +248,7 @@ namespace geometricks {
           auto right_child = __right_child__( cur_node );
           if( right_child ) {
             //Finally, check the distance to the hyperplane.
-            auto distance_to_hyperplane = f( point, m_data_array[ cur_node.m_index ], dimension::dimension_v<Dimension> );
+            auto distance_to_hyperplane = distance_function( point, m_data_array[ cur_node.m_index ] );
             if( distance_to_hyperplane < best_distance ) {
               __nearest_neighbor_impl__<NextDimension>( point, right_child, closest, best_distance, f );
             }
@@ -246,7 +273,7 @@ namespace geometricks {
           auto left_child = __left_child__( cur_node );
           if( left_child ) {
             //Finally, check the distance to the hyperplane.
-            auto distance_to_hyperplane = f( point, m_data_array[ cur_node.m_index ], dimension::dimension_v<Dimension> );
+            auto distance_to_hyperplane = distance_function( point, m_data_array[ cur_node.m_index ] );
             if( distance_to_hyperplane < best_distance ) {
               __nearest_neighbor_impl__<NextDimension>( point, left_child, closest, best_distance, f );
             }

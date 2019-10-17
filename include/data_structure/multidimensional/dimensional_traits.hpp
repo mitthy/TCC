@@ -1,9 +1,13 @@
 #ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
 #define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_DIMENSIONAL_TRAITS_HPP
 
+//C++ stblib includes
 #include <utility>
 #include <tuple>
+
+//Project includes
 #include "meta/utils.hpp"
+#include "meta/detect.hpp"
 #include "algorithm/absolute_difference.hpp"
 
 namespace geometricks {
@@ -116,6 +120,26 @@ namespace geometricks {
         }
 
       };
+
+    } //namespace dimension
+
+    namespace data_structure {
+
+      namespace __detail__ {
+
+        template< typename Functor, typename T, typename U, typename Dimension >
+        using compare_dimension = decltype( std::declval<Functor>()( std::declval<T>(), std::declval<U>(), std::declval<Dimension>() ) );
+
+        template< typename Functor, typename T, typename U >
+        using compare_value = decltype( std::declval<Functor>()( std::declval<T>(), std::declval<U>() ) );
+
+        template< typename Functor, typename T, typename U, int I >
+        constexpr bool has_dimension_compare = meta::is_valid_expression_v<compare_dimension, Functor, T, U, dimension::dimension_t<I>>;
+
+        template< typename Functor, typename T, typename U >
+        constexpr bool has_value_compare = meta::is_valid_expression_v<compare_value, Functor, T, U>;
+
+      }
 
     }
 
