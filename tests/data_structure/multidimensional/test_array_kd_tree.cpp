@@ -21,7 +21,7 @@ TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
-  for( int i = 0; i < 20000; ++i ) {
+  for( int i = 0; i < 200000; ++i ) {
     int randx = rand() % 20000 ;
     int randy = rand() % 20000 ;
     int randz = rand() % 20000 ;
@@ -57,6 +57,14 @@ TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 0, 49, 87 ) );
     EXPECT_EQ( nearest, std::make_tuple( 0, 49, 87 ) );
     EXPECT_EQ( distance, 0u );
+  }
+  for( int i = 0; i < 20000; ++i ) {
+    int randx = rand() % 500000;
+    int randy = rand() % 500000;
+    int randz = rand() % 500000;
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( randx, randy, randz ) );
+    ( void ) nearest;
+    ( void ) distance;
   }
 }
 

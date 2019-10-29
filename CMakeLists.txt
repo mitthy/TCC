@@ -1,7 +1,8 @@
 cmake_minimum_required( VERSION 3.10 )
 project( Geometricks VERSION 0.0.0
-            DESCRIPTION "Geometric data structures header only library for C++."
-          LANGUAGES CXX )
+  DESCRIPTION "Geometric data structures header only library for C++."
+  LANGUAGES CXX
+)
 
 #Got this idea from EnTT project...
 
@@ -96,6 +97,8 @@ target_sources( GeometricksDataStructure INTERFACE ${GEOMETRICKS_DATA_STRUCTURE_
 target_include_directories( GeometricksDataStructure INTERFACE include/ )
 target_compile_features( GeometricksDataStructure INTERFACE cxx_std_17 )
 target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming GeometricksFunctional )
+
+set( CMAKE_CXX_FLAGS_RELEASE "-O3" )
 
 option( BUILD_GEOMETRICKS_TESTS "Build tests for Geometricks" OFF )
 if( ${BUILD_GEOMETRICKS_TESTS} OR ( ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} ) )

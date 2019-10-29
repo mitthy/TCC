@@ -62,7 +62,10 @@ namespace geometricks {
         using return_type = typename std::iterator_traits<Iterator>::value_type;
         auto size = std::distance( first, last );
         auto init = zero_traits<return_type>::zero();
-        init = std::accumulate( first, last, std::move( init ), std::plus<>{} );
+        for( int i = 0; i < size; ++i ) {
+          init += *first;
+          ++first;
+        }
         return init / size;
       }
 

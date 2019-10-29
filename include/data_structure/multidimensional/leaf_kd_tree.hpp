@@ -368,9 +368,8 @@ namespace geometricks {
           auto begin = __detail__::dimensional_iterator<InputIterator, Dimension>( first );
           auto end = __detail__::dimensional_iterator<Sentinel, Dimension>( last );
           auto split = m_split( begin, end );
-          auto temp_function = m_compare;
-          auto partition_function = [&temp_function, split]( const auto& element ) {
-            return temp_function( element, split, dimension::dimension_v<Dimension> );
+          auto partition_function = [ this, &split ]( const auto& element ) {
+            return this->m_compare( element, split, dimension::dimension_v<Dimension> );
           };
           auto middle = geometricks::algorithm::partition( first, last, partition_function );
           if( first == middle ) {

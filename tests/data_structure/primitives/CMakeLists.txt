@@ -1,3 +1,6 @@
 add_executable( TestStaticVector test_static_vector.cpp )
 target_link_libraries( TestStaticVector gtest gmock gtest_main GeometricksDataStructure )
 gtest_discover_tests( TestStaticVector COMMAND TestStaticVector )
+add_executable( TestSmallVector test_small_vector.cpp )
+target_link_libraries( TestSmallVector gtest gmock gtest_main GeometricksDataStructure )
+gtest_discover_tests( TestSmallVector COMMAND TestSmallVector )
