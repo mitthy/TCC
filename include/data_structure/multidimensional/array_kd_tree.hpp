@@ -5,6 +5,7 @@
 #include <functional>
 #include <type_traits>
 #include <algorithm>
+#include <queue>
 
 //Project includes
 #include "dimensional_traits.hpp"
@@ -38,6 +39,17 @@ namespace geometricks {
     template< typename T,
               typename Compare = std::less<> >
     struct array_kd_tree : Compare {
+
+    private:
+
+      struct __heap_compare__ {
+        template< typename DistanceType >
+        constexpr bool operator()( const std::pair<T*, DistanceType>& lhs, const std::pair<T*, DistanceType>& rhs ) const noexcept {
+          return lhs.second < rhs.second;
+        }
+      };
+
+    public:
 
       //Constructor
 
@@ -173,6 +185,21 @@ namespace geometricks {
         return std::pair<const T&, distance_t>( *closest, best );
       }
 
+      template< typename Collection, typename DistanceFunction = dimension::default_nearest_neighbour_function >
+      Collection&
+      k_nearest_neighbor( const T& point, uint32_t K, Collection& output_col, DistanceFunction f = DistanceFunction{} ) {
+        using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
+        static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
+        std::priority_queue<std::pair<T*, distance_t>, std::vector<std::pair<T*, distance_t>>, __heap_compare__> max_heap;
+        __k_nearest_neighbor_impl__<0, DistanceFunction, distance_t>( point, __root__(), K, max_heap, f );
+        while( !max_heap.empty() ) {
+          auto& element = max_heap.top();
+          meta::add_element( std::make_pair( *element.first, element.second ), output_col );
+          max_heap.pop();
+        }
+        return output_col;
+      }
+
     private:
 
       int32_t m_size;
@@ -276,6 +303,79 @@ namespace geometricks {
             auto distance_to_hyperplane = distance_function( point, m_data_array[ cur_node.m_index ] );
             if( distance_to_hyperplane < best_distance ) {
               __nearest_neighbor_impl__<NextDimension>( point, left_child, closest, best_distance, f );
+            }
+          }
+        }
+      }
+
+      template< int Dimension,
+                typename DistanceFunction,
+                typename DistanceType >
+      void __k_nearest_neighbor_impl__( const T& point,
+                                        const node_t& node,
+                                        uint32_t K,
+                                        std::priority_queue<std::pair<T*, DistanceType>, std::vector<std::pair<T*, DistanceType>>, __heap_compare__>& max_heap,
+                                        DistanceFunction f ) {
+        constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
+        auto compare_function = []( const T& left, const T& right ) {
+          Compare comp{};
+          return comp( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
+        };
+
+        auto distance_function = [ &f ]( auto&& lhs, auto&& rhs ) {
+          constexpr int I = Dimension;
+          if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, T, I> ) {
+            return f( std::forward<decltype( lhs )>( lhs ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, T, dimension::type_at<T, I>, I> ) {
+            return f( std::forward<decltype( lhs )>( lhs ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, T, I> ) {
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> );
+          }
+          else if constexpr( __detail__::has_dimension_compare<DistanceFunction, dimension::type_at<T, I>, dimension::type_at<T, I>, I> ) {
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ), dimension::dimension_v<I> );
+          }
+          else {
+            static_assert( __detail__::has_value_compare<DistanceFunction, dimension::type_at<T, I>, dimension::type_at<T, I>>, "Please supply a dimension compare, a value, value, dimension compare or a value compare." );
+            return f( dimension::get( std::forward<decltype( lhs )>( lhs ), dimension::dimension_v<I> ), dimension::get( std::forward<decltype( rhs )>( rhs ), dimension::dimension_v<I> ) );
+          }
+        };
+        if( compare_function( point, m_data_array[ node.m_index ] ) ) {
+          auto left_child = __left_child__( node );
+          if( left_child ) {
+            __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, left_child, K, max_heap, f );
+          }
+          auto distance = f( point, m_data_array[ node.m_index ] );
+          auto heap_element = std::make_pair( &m_data_array[ node.m_index ], distance );
+          max_heap.push( heap_element );
+          if( max_heap.size() > K ) {
+            max_heap.pop();
+          }
+          auto right_child = __right_child__( node );
+          if( right_child ) {
+            auto distance_to_hyperplane = distance_function( point, m_data_array[ node.m_index ] );
+            if( max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
+              __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, right_child, K, max_heap, f );
+            }
+          }
+        }
+        else {
+          auto right_child = __right_child__( node );
+          if( right_child ) {
+            __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, right_child, K, max_heap, f );
+          }
+          auto distance = f( point, m_data_array[ node.m_index ] );
+          auto heap_element = std::make_pair( &m_data_array[ node.m_index ], distance );
+          max_heap.push( heap_element );
+          if( max_heap.size() > K ) {
+            max_heap.pop();
+          }
+          auto left_child = __left_child__( node );
+          if( left_child ) {
+            auto distance_to_hyperplane = distance_function( point, m_data_array[ node.m_index ] );
+            if( max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
+              __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, left_child, K, max_heap, f );
             }
           }
         }

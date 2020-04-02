@@ -117,41 +117,6 @@ namespace geometricks {
 
       };
 
-      template< typename T >
-      struct insert_tag;
-
-      struct push_back {};
-
-      struct insert {};
-
-      template< typename T >
-      using push_back_expr = decltype( std::declval<T>().push_back( std::declval<typename T::value_type>() ) );
-
-      template< typename T >
-      using insert_expr = decltype( std::declval<T>().insert( std::declval<typename T::value_type>() ) );
-
-      template< typename T >
-      constexpr bool has_push_back = meta::is_valid_expression_v<push_back_expr, T>;
-
-      template< typename T >
-      constexpr bool has_insert = meta::is_valid_expression_v<insert_expr, T>;
-
-      static_assert( has_push_back<std::vector<int>> );
-
-      template< typename T,
-                typename Container >
-      void add_element( T&& element, Container& cont ) {
-        if constexpr( has_push_back<Container> ) {
-          cont.push_back( std::forward<T>( element ) );
-        }
-        else if constexpr( has_insert<Container> ) {
-          cont.insert( std::forward<T>( element ) );
-        }
-        else {
-          static_assert( geometricks::meta::always_false<T> );
-        }
-      }
-
     }
 
     struct mean_split_function {
@@ -244,7 +209,7 @@ namespace geometricks {
         max_heap.reserve( K + 1 );
         __k_nearest_neighbor_impl__( point, m_head, K, max_heap, f );
         for( auto& element: max_heap ) {
-          __detail__::add_element( std::make_pair( *element.first, element.second ), output );
+          meta::add_element( std::make_pair( *element.first, element.second ), output );
         }
         return output;
       }
@@ -424,13 +389,6 @@ namespace geometricks {
         }
       }
 
-      struct heap_compare {
-        template< typename DistanceType >
-        bool operator()( const std::pair<T*, DistanceType>& lhs, const std::pair<T*, DistanceType>& rhs ) const {
-          return lhs.second < rhs.second;
-        }
-      };
-
       template< int I,
                 typename DistanceFunction,
                 typename DistanceType >
@@ -438,13 +396,16 @@ namespace geometricks {
       __k_nearest_neighbor_impl__( const T& value, node<I>* node, uint32_t K, std::vector<std::pair<T*, DistanceType>>& max_heap,  DistanceFunction f ) const noexcept {
         using maybe_actual_t = std::decay_t<decltype( dimension::get( std::declval<T>(), std::declval<dimension::dimension_t<I>>() ) )>;
         if( !node->m_left && !node->m_right ) {
+          auto heap_compare = []( const std::pair<T*, DistanceType>& lhs, const std::pair<T*, DistanceType>& rhs ) {
+            return lhs.second < rhs.second;
+          };
           T* stored = __get_element__<T>( node );
           auto calculated_distance = f( value, *stored );
           auto heap_element = std::make_pair( stored, calculated_distance );
           max_heap.push_back( heap_element );
-          std::push_heap( max_heap.begin(), max_heap.end(), heap_compare{} );
+          std::push_heap( max_heap.begin(), max_heap.end(), heap_compare );
           if( max_heap.size() > K ) {
-            std::pop_heap( max_heap.begin(), max_heap.end(), heap_compare{} );
+            std::pop_heap( max_heap.begin(), max_heap.end(), heap_compare );
             max_heap.pop_back();
           }
         }

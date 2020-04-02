@@ -3,6 +3,7 @@
 
 //C++ stblib includes
 #include <iostream>
+#include <stdint.h>
 
 //Project includes
 #include "meta/utils.hpp"
@@ -13,17 +14,17 @@ namespace geometricks {
 
     struct rectangle {
 
-      int x_left;
+      int32_t x_left;
 
-      int y_top;
+      int32_t y_top;
 
-      int width;
+      int32_t width;
 
-      int height;
+      int32_t height;
 
       rectangle() = default;
 
-      constexpr rectangle( int x_left_, int y_top_, int width_, int height_ ):  x_left( x_left_ ),
+      constexpr rectangle( int32_t x_left_, int32_t y_top_, int32_t width_, int32_t height_ ):  x_left( x_left_ ),
                                                                                 y_top( y_top_ ),
                                                                                 width( width_ ),
                                                                                 height( height_ ) {}
@@ -71,7 +72,7 @@ namespace geometricks {
       template< typename T >
       constexpr auto
       __make_rect__( const T& value, meta::priority_tag<1> ) -> decltype( rectangle( get<0>( value ), get<1>( value ), get<2>( value ), get<3>( value ) ) ) {
-        return rectangle( std::get<0>( value ), std::get<1>( value ), std::get<2>( value ), std::get<3>( value ) );
+        return rectangle( get<0>( value ), get<1>( value ), get<2>( value ), get<3>( value ) );
       }
 
       template< typename T >

@@ -81,7 +81,7 @@ TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
-  /*kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
   {
     std::vector<std::pair<std::tuple<int, int, int>, size_t>> output_vector;
     output_vector.reserve( 1 );
@@ -135,7 +135,7 @@ TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
     ( void ) nearestK;
     ( void ) nearest;
     EXPECT_EQ( distanceK, distance );
-  }*/
+  }
 }
 
 struct custom_nearest_neghbor_function {
