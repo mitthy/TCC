@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <memory>
-#include "internal/utils.hpp"
+#include "utils.hpp"
 
 namespace geometricks {
 

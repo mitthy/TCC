@@ -30,13 +30,13 @@ include( GoogleTest )
 
 add_library( GeometricksMetaProgramming INTERFACE )
 set( GEOMETRICKS_META_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/conditional_constructors.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/detect.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/list.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/literals.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/all.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta/utils.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meta.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/conditional_constructors.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/detect.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/list.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/literals.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/all.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta/utils.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/meta.hpp
 )
 target_sources( GeometricksMetaProgramming INTERFACE ${GEOMETRICKS_META_HEADER_FILES} )
 target_include_directories( GeometricksMetaProgramming INTERFACE include/ )
@@ -44,36 +44,25 @@ target_compile_features( GeometricksMetaProgramming INTERFACE cxx_std_17 )
 
 add_library( GeometricksMemory INTERFACE )
 set( GEOMETRICKS_MEMORY_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/reference_count.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/all.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator/malloc_allocator.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory/allocator/type_erased_allocator.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/memory.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/all.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/malloc_allocator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/type_erased_allocator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory.hpp
 )
 target_sources( GeometricksMemory INTERFACE ${GEOMETRICKS_MEMORY_HEADER_FILES} )
 target_include_directories( GeometricksMemory INTERFACE include/ )
 target_compile_features( GeometricksMemory INTERFACE cxx_std_17 )
 
-add_library( GeometricksFunctional INTERFACE )
-set( GEOMETRICKS_FUNCTIONAL_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/functional/optional.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/functional.hpp
-)
-target_sources( GeometricksFunctional INTERFACE ${GEOMETRICKS_FUNCTIONAL_HEADER_FILES} )
-target_include_directories( GeometricksFunctional INTERFACE include/ )
-target_compile_features( GeometricksFunctional INTERFACE cxx_std_17 )
-target_link_libraries( GeometricksFunctional INTERFACE GeometricksMetaProgramming )
-
 add_library( GeometricksAlgorithm INTERFACE )
 set( GEOMETRICKS_ALGORITHM_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/mean.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/log.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/partition.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/absolute_difference.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/iter_swap.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm/all.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/algorithm.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/mean.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/log.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/partition.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/absolute_difference.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/iter_swap.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm/all.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/algorithm.hpp
 )
 target_sources( GeometricksAlgorithm INTERFACE ${GEOMETRICKS_ALGORITHM_HEADER_FILES} )
 target_include_directories( GeometricksAlgorithm INTERFACE include/ )
@@ -81,22 +70,20 @@ target_compile_features( GeometricksAlgorithm INTERFACE cxx_std_17 )
 
 add_library( GeometricksDataStructure INTERFACE )
 set( GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/bitmapped_vector_trie.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/functional_bitmapped_vector_trie.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/dimensional_traits.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/shapes.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/leaf_kd_tree.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/quad_tree.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/internal/free_list.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/multidimensional/array_kd_tree.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/primitives/static_vector.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure/all.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/data_structure.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/dimensional_traits.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/shapes.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/leaf_kd_tree.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/quad_tree.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/internal/free_list.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/array_kd_tree.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/internal/static_vector.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/all.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure.hpp
 )
 target_sources( GeometricksDataStructure INTERFACE ${GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES} )
 target_include_directories( GeometricksDataStructure INTERFACE include/ )
 target_compile_features( GeometricksDataStructure INTERFACE cxx_std_17 )
-target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming GeometricksFunctional )
+target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming )
 
 set( CMAKE_CXX_FLAGS_RELEASE "-O3" )
 

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "memory/allocator/malloc_allocator.hpp"
+#include "geometricks/memory/allocator/malloc_allocator.hpp"
 #include <type_traits>
 
 TEST( TestMallocAllocator, TestAllocation ) {

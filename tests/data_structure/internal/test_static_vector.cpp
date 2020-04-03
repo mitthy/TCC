@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/primitives/static_vector.hpp"
+#include "geometricks/data_structure/internal/static_vector.hpp"
 
 TEST( TestStaticVector, TestSafeEmpty ) {
   geometricks::data_structure::safe_static_vector<int, 32> empty{};

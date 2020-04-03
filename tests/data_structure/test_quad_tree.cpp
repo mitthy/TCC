@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/multidimensional/quad_tree.hpp"
+#include "geometricks/data_structure/quad_tree.hpp"
 #include <tuple>
 #include <type_traits>
 

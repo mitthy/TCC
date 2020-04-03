@@ -6,9 +6,9 @@
 #include <tuple>
 
 //Project includes
-#include "meta/utils.hpp"
-#include "meta/detect.hpp"
-#include "algorithm/absolute_difference.hpp"
+#include "geometricks/meta/utils.hpp"
+#include "geometricks/meta/detect.hpp"
+#include "geometricks/algorithm/absolute_difference.hpp"
 
 namespace geometricks {
 

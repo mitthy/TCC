@@ -2,7 +2,7 @@
 #define GEOMETRICKS_ALGORITHM_ITER_SWAP_HPP
 
 //Project includes
-#include "meta/utils.hpp"
+#include "geometricks/meta/utils.hpp"
 #include <type_traits>
 
 /**

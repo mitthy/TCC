@@ -9,7 +9,7 @@
 
 //Project includes
 #include "dimensional_traits.hpp"
-#include "meta/utils.hpp"
+#include "geometricks/meta/utils.hpp"
 
 /**
 * @file Implements a cache friendly kd tree stored as an array.
@@ -185,6 +185,47 @@ namespace geometricks {
         return std::pair<const T&, distance_t>( *closest, best );
       }
 
+      /**
+      * @brief Finds the nearest neighbor of an input point and returns a collection.
+      * @param point The input point to query.
+      * @param K the number of desired output points.
+      * @param output_col The output collection to hold the points.
+      * @param f Point distance function object. Should be able to compare 2 points and return a size type as well as
+      * compare 2 points in a specific dimension and return a size type with the following signature: operator()( const T& left, T& right, dimension::dimension_t<Index> ) const noexcept.
+      * Also, distance( point1, point2 ) should be equal to distance( point2, point1 ).
+      * @return A reference to the collection output_col.
+      * @details Computes the k nearest neighbor of a given input point given the distance function. The default distance is the euclidean distance of the points without computing
+      * the square root to save on efficiency, since if sqrt( euclid_distance_no_sqrt_root(a, b) < euclid_distance_no_sqrt_root(a, c) ), euclid_distance_no_sqrt_root(a, b) < euclid_distance_no_sqrt_root(a, c).
+      * The points are returned in an unspecified order.
+      * Example:
+      * @code{.cpp}
+      * std::vector<std::tuple<int, int, int>> input_vector;
+        ...
+        geometricks::data_structure::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+        struct manhattan_distance_t {
+          template< typename T, int N >
+          size_t operator()( const T& lhs, const T& rhs, dimension::dimension_t<N> ) {
+            return geometricks::algorithm::absolute_difference( geometricks::dimension::get( lhs, dimension::dimension_v<N> ), geometricks::dimension::get( rhs, dimension::dimension_v<N> ) );
+          }
+          template< typename T >
+          size_t operator()( const T& lhs, const T& rhs ) {
+            return distance_impl( lhs, rhs, std::make_index_sequence<dimension::dimensional_traits<T>::dimensions>() );
+          }
+          template< typename T, int... I >
+          size_t distance_impl( const T& lhs, const T& rhs, std::index_sequence<I...> ) {
+            return ( this->operator()( lhs, rhs, dimension_v<I> ) + ... );
+          }
+        };
+        std::vector<std::pair<std::tuple<int, int, int>, size_t>> output_vector;
+        tree.k_nearest_neighbor( std::make_tuple( 10, 10, 10 ), 4, output_vector, manhattan_distance_t{} ); //output_vector now contains the 4 nearest neighbors of [10, 10, 10].
+      * @endcode
+      * @todo Add references.
+      * @todo Add complexity.
+      * @todo Allow searching for threshold on nearest neighbor. Could be useful for code like collision detection.
+      * @todo Improve performance by using a stack allocated vector as the max heeap, only fallbacking to the heap in case of a big K.
+      * @todo Allow alternative version of this function to receive the number of neighbors as a template parameter. Could be useful with a stack allocated vector.
+      * @todo Make a new version of this function that doesn't require an output_col as a parameter but simply returns a vector.
+      */
       template< typename Collection, typename DistanceFunction = dimension::default_nearest_neighbour_function >
       Collection&
       k_nearest_neighbor( const T& point, uint32_t K, Collection& output_col, DistanceFunction f = DistanceFunction{} ) {

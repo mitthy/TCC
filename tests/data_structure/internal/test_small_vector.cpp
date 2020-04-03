@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/primitives/small_vector.hpp"
+#include "geometricks/data_structure/internal/small_vector.hpp"
 
 template< typename T, int I>
 using small_vector = geometricks::data_structure::small_vector<T, I>;

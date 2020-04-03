@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 //Project includes
-#include "meta/utils.hpp"
+#include "geometricks/meta/utils.hpp"
 
 namespace geometricks {
 

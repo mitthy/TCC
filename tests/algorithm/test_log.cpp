@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "algorithm/log.h"
+#include "geometricks/algorithm/log.h"
 
 TEST( TestLog, TestZero ) {
   EXPECT_EQ( geometricks::algorithm::utils::log2( 0 ), -1 );

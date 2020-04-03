@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "memory/allocator/pool_allocator.hpp"
+#include "geometricks/memory/allocator/pool_allocator.hpp"
 #include <vector>
 #include <set>
 #include <stdlib.h>

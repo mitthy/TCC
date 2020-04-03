@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "algorithm/mean.hpp"
+#include "geometricks/algorithm/mean.hpp"
 #include<vector>
 
 TEST( TestMean, TestMeanFunction ) {

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "algorithm/partition.hpp"
+#include "geometricks/algorithm/partition.hpp"
 #include <vector>
 
 TEST( TestPartition, TestPartitionWithLessThan ) {

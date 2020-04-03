@@ -5,4 +5,6 @@
 
 #include "allocator/type_erased_allocator.hpp"
 
+#include "allocator/pool_allocator.hpp"
+
 #endif //GEOMETRICKS_MEMORY_ALLOCATOR_HPP

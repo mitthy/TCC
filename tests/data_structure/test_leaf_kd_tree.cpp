@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/multidimensional/leaf_kd_tree.hpp"
+#include "geometricks/data_structure/leaf_kd_tree.hpp"
 #include <vector>
 #include <tuple>
 #include <cmath>

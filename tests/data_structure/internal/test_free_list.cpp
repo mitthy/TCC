@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/multidimensional/internal/free_list.hpp"
+#include "geometricks/data_structure/internal/free_list.hpp"
 #include <utility>
 
 using free_list_t = geometricks::data_structure::__detail__::__free_list__< int >;

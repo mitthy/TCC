@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "memory/allocator/type_erased_allocator.hpp"
+#include "geometricks/memory/allocator/type_erased_allocator.hpp"
 
 TEST( TestTypeErasedAllocator, TestEmptyCreation ) {
   geometricks::memory::type_erased_allocator empty{};

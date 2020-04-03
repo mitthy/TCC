@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "data_structure/multidimensional/shapes.hpp"
+#include "geometricks/data_structure/shapes.hpp"
 
 using namespace geometricks::data_structure;
 

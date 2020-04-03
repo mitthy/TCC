@@ -14,10 +14,10 @@
 #include <vector>
 
 //Project includes
-#include "meta/detect.hpp"
-#include "meta/utils.hpp"
-#include "algorithm/mean.hpp"
-#include "algorithm/partition.hpp"
+#include "geometricks/meta/detect.hpp"
+#include "geometricks/meta/utils.hpp"
+#include "geometricks/algorithm/mean.hpp"
+#include "geometricks/algorithm/partition.hpp"
 #include "dimensional_traits.hpp"
 
 namespace geometricks {
