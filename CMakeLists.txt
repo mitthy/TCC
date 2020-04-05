@@ -47,7 +47,8 @@ set( GEOMETRICKS_MEMORY_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/malloc_allocator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/type_erased_allocator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/pool_allocator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory/allocator/new_allocator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/memory.hpp
 )
 target_sources( GeometricksMemory INTERFACE ${GEOMETRICKS_MEMORY_HEADER_FILES} )

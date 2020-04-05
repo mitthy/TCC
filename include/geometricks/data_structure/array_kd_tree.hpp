@@ -31,10 +31,10 @@ namespace geometricks {
     * @see leaf_kd_tree for a leaf based kd tree.
     * @see https://en.wikipedia.org/wiki/K-d_tree for a quick reference on kd tree.
     * @todo Static assert on compare so we know it can sort in all dimensions.
-    * @todo Implement k_nearest_neighbor.
     * @todo Implement range search operations.
     * @todo noexcept and constexpr anotations.
     * @todo Add threshold neighbors to find all elements below threshold distance to efficiently implement collision detection algorithms.
+    * @todo Make this class allocator aware with library defined custom allocators.
     */
     template< typename T,
               typename Compare = std::less<> >

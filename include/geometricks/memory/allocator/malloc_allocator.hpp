@@ -14,7 +14,7 @@ namespace geometricks {
 
     void*
     allocate( malloc_allocator_t&, size_t sz, size_t align ) {
-      return aligned_alloc(align, sz);
+      return aligned_alloc( align, sz );
     }
 
     void*
