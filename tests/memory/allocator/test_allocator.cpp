@@ -13,6 +13,8 @@ TEST( TestAllocator, TestDefaultAllocator ) {
   geometricks::memory::set_default_allocator( geometricks::memory::malloc_allocator );
   EXPECT_FALSE( geometricks::memory::get_default_allocator() == geometricks::memory::new_allocator );
   EXPECT_TRUE( geometricks::memory::get_default_allocator() == geometricks::memory::malloc_allocator );
+  geometricks::memory::set_default_allocator( default_allocator );
+  EXPECT_TRUE( geometricks::memory::get_default_allocator() == geometricks::memory::new_allocator );
 }
 
 TEST( TestAllocator, TestDefaultConstructor ) {

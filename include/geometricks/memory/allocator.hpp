@@ -261,6 +261,8 @@ namespace geometricks {
     template< typename Allocator >
     void set_default_allocator( Allocator* );
 
+    void set_default_allocator( allocator& allocator );
+
   }
 
   struct allocator final {
@@ -274,6 +276,8 @@ namespace geometricks {
     }
 
     friend allocator memory::get_default_allocator();
+
+    friend void memory::set_default_allocator( allocator& allocator );
 
     void* allocate( size_t sz, size_t align ) {
       return m_table->__allocate__( m_allocator, sz, align );
@@ -339,6 +343,11 @@ namespace geometricks {
       static_assert( is_allocator<Allocator> );
       __detail__::__default_allocator__ = ( void* ) &allocator;
       __detail__::__default_v_table__ = __detail__::__make_v_table__<Allocator>();
+    }
+
+    void set_default_allocator( allocator& allocator ) {
+      __detail__::__default_allocator__ = allocator.m_allocator;
+      __detail__::__default_v_table__ = allocator.m_table;
     }
 
   }
