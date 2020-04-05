@@ -22,7 +22,7 @@ TEST( TestLeafKDTree, TestNearestNeighborCorrectness ) {
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
-  for( int i = 0; i < 50000; ++i ) {
+  for( int i = 0; i < 100; ++i ) {
     int randx = rand() % 20000 ;
     int randy = rand() % 20000 ;
     int randz = rand() % 20000 ;
@@ -74,7 +74,7 @@ TEST( TestLeafKDTree, TestKNearestNeighborSingleElement ) {
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
-  for( int i = 0; i < 5000; ++i ) {
+  for( int i = 0; i < 100; ++i ) {
     int randx = rand() % 20000 ;
     int randy = rand() % 20000 ;
     int randz = rand() % 20000 ;
@@ -195,7 +195,7 @@ TEST( TestLeafKDTree, TestNearestNeighborCustomFunction ) {
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
-  for( int i = 0; i < 5000; ++i ) {
+  for( int i = 0; i < 100; ++i ) {
     int randx = rand() % 20000 ;
     int randy = rand() % 20000 ;
     int randz = rand() % 20000 ;
