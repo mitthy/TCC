@@ -10,6 +10,7 @@
 //Project includes
 #include "dimensional_traits.hpp"
 #include "geometricks/meta/utils.hpp"
+#include "geometricks/memory/allocator.hpp"
 
 /**
 * @file Implements a cache friendly kd tree stored as an array.
@@ -65,7 +66,9 @@ namespace geometricks {
       * @todo Supply paper on kd tree construction.
       */
       template< typename InputIterator, typename Sentinel >
-      array_kd_tree( InputIterator begin, Sentinel end ): m_size( std::distance( begin, end ) ), m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
+      array_kd_tree( InputIterator begin, Sentinel end, geometricks::allocator alloc = geometricks::allocator{} ):  m_allocator( alloc ),
+                                                                                                                    m_size( std::distance( begin, end ) ),
+                                                                                                                    m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
         __construct_array_kd_tree__<0>( begin, end, 0, m_size );
       }
 
@@ -77,8 +80,9 @@ namespace geometricks {
       * @details Performs a deep copy of the right hand side parameter.
       * @note Complexity: @b O(n)
       */
-      array_kd_tree( const array_kd_tree& rhs ):  m_size( rhs.m_size ),
-                                                  m_data_array( ( T* ) ::operator new( sizeof( T ) * m_size ) ) {
+      array_kd_tree( const array_kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ):   m_allocator( alloc ),
+                                                                                                            m_size( rhs.m_size ),
+                                                                                                            m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
         std::copy( rhs.m_data_array, rhs.m_data_array + m_size, m_data_array );
       }
 
@@ -91,7 +95,8 @@ namespace geometricks {
       * @details Moves the data from rhs into this.
       * @note Complexity: @b O(1)
       */
-      array_kd_tree( array_kd_tree&& rhs ): m_size( rhs.m_size ),
+      array_kd_tree( array_kd_tree&& rhs ): m_allocator( rhs.m_allocator ),
+                                            m_size( rhs.m_size ),
                                             m_data_array( rhs.m_data_array ) {
         rhs.m_data_array = nullptr;
       }
@@ -110,7 +115,7 @@ namespace geometricks {
         if( &rhs != this ) {
           //TODO: optimize to only allocate new buffer in case old capacity wasn't enough.
           //TODO: exception guarantee.
-          T* new_buff = ( T* ) ::operator new( sizeof( T ) * rhs.m_size );
+          T* new_buff = ( T* ) m_allocator.allocate( sizeof( T ) * rhs.m_size );
           std::copy( rhs.m_data_array, rhs.m_data_array + rhs.m_size, new_buff );
           __destroy__();
           m_data_array = new_buff;
@@ -130,8 +135,10 @@ namespace geometricks {
       */
       array_kd_tree& operator=( array_kd_tree&& rhs ) {
         if( &rhs != this ) {
+          __destroy__();
           m_data_array = rhs.m_data_array;
           m_size = rhs.m_size;
+          m_allocator = rhs.m_allocator;
           rhs.m_data_array = nullptr;
         }
         return *this;
@@ -243,6 +250,8 @@ namespace geometricks {
 
     private:
 
+      geometricks::allocator m_allocator;
+
       int32_t m_size;
 
       T* m_data_array;
@@ -265,10 +274,12 @@ namespace geometricks {
 
       void
       __destroy__() {
-        for( int32_t i = 0; i < m_size; ++i ) {
-          m_data_array[ i ].~T();
+        if( m_data_array != nullptr ) {
+          for( int32_t i = 0; i < m_size; ++i ) {
+            m_data_array[ i ].~T();
+          }
+          m_allocator.deallocate( m_data_array );
         }
-        ::operator delete( m_data_array );
       }
 
       template< int Dimension, typename DistanceFunction, typename DistanceType >
@@ -468,11 +479,13 @@ namespace geometricks {
         return { index_right, count_right };
       }
 
-      T& __get__( node_t node ) {
+      T&
+      __get__( node_t node ) {
         return m_data_array[ node.m_index ];
       }
 
-      const T& __get__( node_t node ) const {
+      const T&
+      __get__( node_t node ) const {
         return m_data_array[ node.m_index ];
       }
 

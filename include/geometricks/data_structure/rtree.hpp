@@ -25,7 +25,7 @@ namespace geometricks {
 
         };
 
-        std::vector<node> m_nodes;
+        std::vector<node> m_nodes;  //Change this to raw array so we can customize with library defined allocator.
 
         __2d_rtree__(): m_nodes{ __create_root__() } {}
 

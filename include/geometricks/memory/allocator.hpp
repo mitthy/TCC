@@ -270,9 +270,12 @@ namespace geometricks {
     allocator(): m_allocator( memory::__detail__::__default_allocator__ ), m_table( memory::__detail__::__default_v_table__ ) {
     }
 
-    template< typename Allocator >
+    template< typename Allocator, typename Void = std::enable_if_t< !std::is_same_v< std::decay_t<Allocator>, allocator > > >
     allocator( Allocator& alloc ): m_allocator( ( void* ) &alloc ), m_table( memory::__detail__::__make_v_table__<Allocator>() ) {
       static_assert( memory::is_allocator<Allocator> );
+    }
+
+    allocator( const allocator& other ): m_allocator( other.m_allocator ), m_table( other.m_table ) {
     }
 
     friend allocator memory::get_default_allocator();

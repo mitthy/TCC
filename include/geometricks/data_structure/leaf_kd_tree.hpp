@@ -19,6 +19,7 @@
 #include "geometricks/algorithm/mean.hpp"
 #include "geometricks/algorithm/partition.hpp"
 #include "dimensional_traits.hpp"
+#include "geometricks/memory/allocator.hpp"
 
 namespace geometricks {
 
@@ -132,7 +133,8 @@ namespace geometricks {
     struct less_compare_function {
 
       template< typename T, typename U >
-      bool operator()( const T& element, const U& split_value ) const noexcept {
+      bool
+      operator()( const T& element, const U& split_value ) const noexcept {
         return element < split_value;
       }
 
@@ -154,33 +156,54 @@ namespace geometricks {
 
       template< typename InputIterator,
                 typename Sentinel >
-      leaf_kd_tree( InputIterator first, Sentinel last ): m_compare{},
-                                                          m_split{},
-                                                          m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
+      leaf_kd_tree( InputIterator first, Sentinel last, geometricks::allocator alloc = geometricks::allocator{} ): m_allocator( alloc ),
+                                                                                        m_compare{},
+                                                                                        m_split{},
+                                                                                        m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
       }
 
       template< typename InputIterator,
                 typename Sentinel >
-      leaf_kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{} ): m_compare( compare ),
-                                                                                                                          m_split( split ),
-                                                                                                                          m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
+      leaf_kd_tree( InputIterator first, Sentinel last, CompareFunction compare, SplitFunction split = SplitFunction{}, geometricks::allocator alloc = geometricks::allocator{} ):  m_allocator( alloc ),
+                                                                                                                                                                                    m_compare( compare ),
+                                                                                                                                                                                    m_split( split ),
+                                                                                                                                                                                    m_head( __create_leaf_kd_tree__<0>( first, last ) ) {
               static_assert( std::is_same_v<std::decay_t<decltype( *first )>, T> ); //We need this line to make sure we are constructing the correct type.
                                                                                     //Otherwise we would need a work around conversion.
       }
 
       //Copy constructors
 
-      leaf_kd_tree( const leaf_kd_tree& rhs ) {
+      leaf_kd_tree( const leaf_kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ) {
         struct dummy {};
         static_assert( meta::always_false<dummy>, "TODO: Not implemented yet." );
       }
 
-      leaf_kd_tree( leaf_kd_tree&& rhs ): m_compare( rhs.m_compare ),
+      leaf_kd_tree( leaf_kd_tree&& rhs ): m_allocator( rhs.m_allocator ),
+                                          m_compare( rhs.m_compare ),
                                           m_split( rhs.m_split ),
                                           m_head( rhs.m_head ) {
         rhs.m_head = nullptr;
+      }
+
+      leaf_kd_tree&
+      operator=( const leaf_kd_tree& rhs ) {
+        struct dummy {};
+        static_assert( meta::always_false<dummy>, "TODO: Not implemented yet." );
+        return *this;
+      }
+
+      leaf_kd_tree&
+      operator=( leaf_kd_tree&& rhs ) {
+        if( &rhs != this ) {
+          m_allocator = rhs.m_allocator;
+          m_compare = rhs.m_compare;
+          m_split = rhs.m_split;
+          m_head = rhs.m_head;
+        }
+        return *this;
       }
 
       //Destructor
@@ -201,7 +224,8 @@ namespace geometricks {
 
       template< typename DistanceFunction = dimension::default_nearest_neighbour_function,
                 typename Collection >
-      Collection& k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
+      Collection&
+      k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {
         //TODO: instead of pushing objects one by one into the output collection, we can maybe think of a better way.
         using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
         static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
@@ -262,6 +286,8 @@ namespace geometricks {
 
       };
 
+      geometricks::allocator m_allocator;
+
       compare_t m_compare;
 
       SplitFunction m_split;
@@ -278,7 +304,7 @@ namespace geometricks {
           std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
           std::aligned_storage_t<sizeof( actual_t ), alignof( actual_t )> m_storage;
         };
-        alloc_type* raw_memory = static_cast<alloc_type*>( ::operator new( sizeof( alloc_type ) ) );
+        alloc_type* raw_memory = static_cast<alloc_type*>( m_allocator.allocate( sizeof( alloc_type ) ) );
         new ( &raw_memory->m_node ) node<NodeDimension>{ std::forward<Args>( args )... };
         new ( &raw_memory->m_storage ) actual_t{ std::forward<Type>( object ) };
         return reinterpret_cast<node<NodeDimension>*>( &( raw_memory->m_node ) );
@@ -302,7 +328,7 @@ namespace geometricks {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( T ), alignof( T )> m_storage;
           };
-          ::operator delete( to_delete );
+          m_allocator.deallocate( to_delete );
         }
         else {
           maybe_actual_t* middle = __get_element__<maybe_actual_t>( to_delete );
@@ -317,7 +343,7 @@ namespace geometricks {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( maybe_actual_t ), alignof( maybe_actual_t )> m_storage;
           };
-          ::operator delete( to_delete );
+          m_allocator.deallocate( to_delete );
         }
       }
 

@@ -138,6 +138,126 @@ TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
   }
 }
 
+TEST( TestArrayKDTree, TestCopyConstructor ) {
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  kd_tree<std::tuple<int, int, int>> copy_constructed{ tree };
+  {
+    auto [nearestCopy, distanceCopy] = copy_constructed.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    EXPECT_EQ( distanceCopy, distance );
+    EXPECT_EQ( nearestCopy, nearest );
+  }
+  {
+    auto [nearestCopy, distanceCopy] = copy_constructed.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    EXPECT_EQ( distanceCopy, distance );
+    EXPECT_EQ( nearestCopy, nearest );
+  }
+}
+
+TEST( TestArrayKDTree, TestMoveConstructor ) {
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  kd_tree<std::tuple<int, int, int>> move_constructed{ std::move( tree ) };
+  {
+    auto [nearest, distance] = move_constructed.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 10, 9, 11 ) );
+    EXPECT_EQ( distance, 2u );
+  }
+  {
+    auto [nearest, distance] = move_constructed.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 44, 78, 67 ) );
+    EXPECT_EQ( distance, 1169u );
+  }
+}
+
+TEST( TestArrayKDTree, TestMoveAssignment ) {
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  tree = std::move( tree ); //Write this stupid line cause we also gotta test self assignment.
+  std::vector<std::tuple<int,int,int>> input_vector_2;
+  input_vector_2.push_back( std::make_tuple( 0, 0, 0 ) );
+  kd_tree<std::tuple<int, int, int>> move_assigned( input_vector_2.begin(), input_vector_2.end() );
+  move_assigned = std::move( tree );
+  {
+    auto [nearest, distance] = move_assigned.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 10, 9, 11 ) );
+    EXPECT_EQ( distance, 2u );
+  }
+  {
+    auto [nearest, distance] = move_assigned.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 44, 78, 67 ) );
+    EXPECT_EQ( distance, 1169u );
+  }
+}
+
+TEST( TestArrayKDTree, TestCopyAssignment ) {
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  tree = tree; //Write this stupid line cause we also gotta test self assignment.
+  std::vector<std::tuple<int,int,int>> input_vector_2;
+  input_vector_2.push_back( std::make_tuple( 0, 0, 0 ) );
+  kd_tree<std::tuple<int, int, int>> copy_assigned( input_vector_2.begin(), input_vector_2.end() );
+  copy_assigned = tree;
+  {
+    auto [nearestCopy, distanceCopy] = copy_assigned.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    EXPECT_EQ( distanceCopy, distance );
+    EXPECT_EQ( nearestCopy, nearest );
+  }
+  {
+    auto [nearestCopy, distanceCopy] = copy_assigned.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    EXPECT_EQ( distanceCopy, distance );
+    EXPECT_EQ( nearestCopy, nearest );
+  }
+}
+
 struct custom_nearest_neghbor_function {
 
   size_t operator()( const std::tuple<int,int,int>& left, const std::tuple<int,int,int>& right ) {
