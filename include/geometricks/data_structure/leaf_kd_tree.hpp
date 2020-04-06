@@ -328,7 +328,7 @@ namespace geometricks {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( T ), alignof( T )> m_storage;
           };
-          m_allocator.deallocate( to_delete );
+          m_allocator.deallocate( to_delete, sizeof( alloc_type_leaf ) );
         }
         else {
           maybe_actual_t* middle = __get_element__<maybe_actual_t>( to_delete );
@@ -343,7 +343,7 @@ namespace geometricks {
             std::aligned_storage_t<sizeof( node<NodeDimension> ), alignof( node<NodeDimension> )> m_node;
             std::aligned_storage_t<sizeof( maybe_actual_t ), alignof( maybe_actual_t )> m_storage;
           };
-          m_allocator.deallocate( to_delete );
+          m_allocator.deallocate( to_delete, sizeof( alloc_type_root ) );
         }
       }
 

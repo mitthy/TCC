@@ -3,6 +3,7 @@
 #include <vector>
 #include <tuple>
 #include <cmath>
+#include "geometricks/memory/allocator/pool_allocator.hpp"
 
 template< typename T >
 using kd_tree = geometricks::data_structure::leaf_kd_tree<T>;
@@ -29,6 +30,69 @@ TEST( TestLeafKDTree, TestNearestNeighborCorrectness ) {
     input_vector.push_back( std::make_tuple( 1000 + i * randx, 1000 + i * randy, 1000 + i * randz ) );
   }
   kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 10, 9, 11 ) );
+    EXPECT_EQ( distance, 2u );
+  }
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 70, 60, 80 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 44, 78, 67 ) );
+    EXPECT_EQ( distance, 1169u );
+  }
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 52, 52, 54 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 50, 50, 54 ) );
+    EXPECT_EQ( distance, 8u );
+  }
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 49, 49, 52 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 49, 50, 53 )  );
+    EXPECT_EQ( distance, 2u );
+  }
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 21, 23, 24 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 20, 24, 23 ) );
+    EXPECT_EQ( distance, 3u );
+  }
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 0, 49, 87 ) );
+    EXPECT_EQ( nearest, std::make_tuple( 0, 49, 87 ) );
+    EXPECT_EQ( distance, 0u );
+  }
+}
+
+TEST( TestLeafKDTree, TestCustomAllocator ) {
+  struct first {
+    void* _;
+    void* __;
+    int ___;
+  };
+  struct second {
+    void* _;
+    void* __;
+    std::tuple<int, int, int> ___;
+  };
+  auto alloc = geometricks::memory::make_multipool_allocator<512>( geometricks::memory::type<first>, geometricks::memory::type<second> );
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  for( int i = 0; i < 100; ++i ) {
+    int randx = rand() % 20000 ;
+    int randy = rand() % 20000 ;
+    int randz = rand() % 20000 ;
+    input_vector.push_back( std::make_tuple( 1000 + i * randx, 1000 + i * randy, 1000 + i * randz ) );
+  }
+  kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end(), alloc };
   {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ) );
     EXPECT_EQ( nearest, std::make_tuple( 10, 9, 11 ) );

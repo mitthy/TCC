@@ -141,49 +141,49 @@ namespace geometricks {
       static_assert( !__can_deallocate_unalign__<int> );
 
       template< typename Allocator >
-      auto __do_deallocate_aligned__( Allocator& allocator, void* ptr, size_t align, meta::priority_tag<0> ) -> decltype( dealloc( allocator, ptr, align ) ) {
-        return dealloc( allocator, ptr, align );
+      auto __do_deallocate_size__( Allocator& allocator, void* ptr, size_t size, meta::priority_tag<0> ) -> decltype( dealloc( allocator, ptr, size ) ) {
+        return dealloc( allocator, ptr, size );
       }
 
       template< typename Allocator >
-      auto __do_deallocate_aligned__( Allocator& allocator, void* ptr, size_t align, meta::priority_tag<1> ) -> decltype( deallocate( allocator, ptr, align ) ) {
-        return deallocate( allocator, ptr, align );
+      auto __do_deallocate_size__( Allocator& allocator, void* ptr, size_t size, meta::priority_tag<1> ) -> decltype( deallocate( allocator, ptr, size ) ) {
+        return deallocate( allocator, ptr, size );
       }
 
       template< typename Allocator >
-      auto __do_deallocate_aligned__( Allocator& allocator, void* ptr, size_t align, meta::priority_tag<2> ) -> decltype( allocator.dealloc( ptr, align ) ) {
-        return allocator.dealloc( ptr, align );
+      auto __do_deallocate_size__( Allocator& allocator, void* ptr, size_t size, meta::priority_tag<2> ) -> decltype( allocator.dealloc( ptr, size ) ) {
+        return allocator.dealloc( ptr, size );
       }
 
       template< typename Allocator >
-      auto __do_deallocate_aligned__( Allocator& allocator, void* ptr, size_t align, meta::priority_tag<3> ) -> decltype( allocator.deallocate( ptr, align ) ) {
-        return allocator.deallocate( ptr, align );
+      auto __do_deallocate_size__( Allocator& allocator, void* ptr, size_t size, meta::priority_tag<3> ) -> decltype( allocator.deallocate( ptr, size ) ) {
+        return allocator.deallocate( ptr, size );
       }
 
       template< typename Allocator >
-      auto __do_deallocate_aligned__( Allocator& allocator, void* ptr, size_t align, meta::priority_tag<4> ) -> decltype( allocator_customization::allocator<Allocator>::deallocate( ptr, align ) ) {
-        return allocator_customization::allocator<Allocator>::deallocate( ptr, align );
+      auto __do_deallocate_size__( Allocator& allocator, void* ptr, size_t size, meta::priority_tag<4> ) -> decltype( allocator_customization::allocator<Allocator>::deallocate( ptr, size ) ) {
+        return allocator_customization::allocator<Allocator>::deallocate( ptr, size );
       }
 
       template< typename T >
-      using __try_deallocate_align__ = decltype( __do_deallocate_aligned__( std::declval<T&>(), std::declval<void*>(), std::declval<size_t>(), std::declval<meta::priority_tag<4>>() ) );
+      using __try_deallocate_align__ = decltype( __do_deallocate_size__( std::declval<T&>(), std::declval<void*>(), std::declval<size_t>(), std::declval<meta::priority_tag<4>>() ) );
 
       template< typename T >
-      constexpr bool __can_deallocate_align__ = meta::is_valid_expression_v<__try_deallocate_align__, T>;
+      constexpr bool __can_deallocate_size__ = meta::is_valid_expression_v<__try_deallocate_align__, T>;
 
       struct __test_deallocate_align__ {
         void dealloc( void*, size_t );
       };
 
-      static_assert( __can_deallocate_align__<__test_deallocate_align__> );
+      static_assert( __can_deallocate_size__<__test_deallocate_align__> );
 
-      static_assert( !__can_deallocate_align__<__test_deallocate_unalign__> );
+      static_assert( !__can_deallocate_size__<__test_deallocate_unalign__> );
 
       template< typename T >
       constexpr bool __can_allocate__ = __can_allocate_align__<T> || __can_allocate_unalign__<T>;
 
       template< typename T >
-      constexpr bool __can_deallocate__ = __can_deallocate_align__<T> || __can_deallocate_unalign__<T>;
+      constexpr bool __can_deallocate__ = __can_deallocate_size__<T> || __can_deallocate_unalign__<T>;
 
       static_assert( __can_allocate__<new_allocator_t> );
 
@@ -192,8 +192,6 @@ namespace geometricks {
       constexpr auto __allocate__ = []( auto& alloc, size_t sz, size_t align ) {
         using alloc_t = std::decay_t<decltype(alloc)>;
         if constexpr( __can_allocate_align__<alloc_t> ) {
-          //If we can allocate aligned regions of memory, check for presence of an aligned delete. If there is none, compile error.
-          static_assert( __can_deallocate_align__<alloc_t> );
           return __do_allocate_aligned__( alloc, sz, align, meta::priority_tag<4>{} );
         }
         else {
@@ -203,16 +201,14 @@ namespace geometricks {
         }
       };
 
-      constexpr auto __deallocate__ = []( auto& alloc, void* ptr, size_t align ) {
+      constexpr auto __deallocate__ = []( auto& alloc, void* ptr, size_t size ) {
         using alloc_t = std::decay_t<decltype(alloc)>;
-        if constexpr( __can_deallocate_align__<alloc_t> ) {
-          //If we can deallocate aligned regions of memory, check for presence of an aligned new. If there is none, compile error.
-          static_assert( __can_allocate_align__<alloc_t> );
-          __do_deallocate_aligned__( alloc, ptr, align, meta::priority_tag<4>{} );
+        if constexpr( __can_deallocate_size__<alloc_t> ) {
+          __do_deallocate_size__( alloc, ptr, size, meta::priority_tag<4>{} );
         }
         else {
           static_assert( __can_deallocate_unalign__<alloc_t> );
-          ( void ) align;
+          ( void ) size;
           __do_deallocate_unaligned__( alloc, ptr, meta::priority_tag<4>{} );
         }
       };
@@ -243,8 +239,8 @@ namespace geometricks {
           []( void* ptr, size_t sz, size_t align ) {
             return __detail__::__allocate__( *static_cast<T*>( ptr ), sz, align );
           },
-          []( void* ptr, void* obj, size_t align ) {
-            __detail__::__deallocate__( *static_cast<T*>( ptr ), obj, align );
+          []( void* ptr, void* obj, size_t size ) {
+            __detail__::__deallocate__( *static_cast<T*>( ptr ), obj, size );
           }
         };
         return &table;
@@ -290,12 +286,8 @@ namespace geometricks {
       return m_table->__allocate__( m_allocator, sz, alignof( std::max_align_t ) );
     }
 
-    void deallocate( void* ptr, size_t align ) {
-      m_table->__deallocate__( m_allocator, ptr, align );
-    }
-
-    void deallocate( void* ptr ) {
-      m_table->__deallocate__( m_allocator, ptr, alignof( std::max_align_t ) );
+    void deallocate( void* ptr, size_t size = 0 ) {
+      m_table->__deallocate__( m_allocator, ptr, size );
     }
 
     template< typename Allocator >
@@ -331,8 +323,8 @@ namespace geometricks {
     alloc.deallocate( ptr );
   }
 
-  void deallocate( allocator& alloc, void* ptr, size_t align ) {
-    alloc.deallocate( ptr, align );
+  void deallocate( allocator& alloc, void* ptr, size_t size ) {
+    alloc.deallocate( ptr, size );
   }
 
   namespace memory {

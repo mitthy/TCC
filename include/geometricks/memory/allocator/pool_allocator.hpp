@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <tuple>
+#include <cstddef>
 
 namespace geometricks {
 
@@ -55,7 +56,8 @@ namespace geometricks {
         }
       }
 
-      void* allocate() {
+      void* allocate( size_t sz ) {
+        ( void ) sz;
         if( data.first_free != nullptr ) {
           void* ret = (void*) data.first_free;
           data.first_free = data.first_free->next;
@@ -141,16 +143,44 @@ namespace geometricks {
 
     public:
 
-      template< typename T >
-      void* allocate() {
-        auto& actual = std::get<pool_allocator<sizeof(T), BlockSize, alignof(T)>>( m_allocators );
-        return actual.allocate();
+      void* allocate( size_t size, size_t align = alignof( std::max_align_t ) ) {
+        return __allocate_impl__( size, align, std::make_index_sequence<sizeof...(Sz)>() );
       }
 
-      template< typename T >
-      void deallocate( T* ptr ) {
-        auto& actual = std::get<pool_allocator<sizeof(T), BlockSize, alignof(T)>>( m_allocators );
-        return actual.deallocate( (void*)ptr );
+      void deallocate( void* ptr, size_t size ) {
+        __deallocate_impl__( ptr, size, std::make_index_sequence<sizeof...(Sz)>() );
+      }
+
+    private:
+
+      template< size_t... Is >
+      void*
+      __allocate_impl__( size_t size, size_t align, std::index_sequence<Is...> ) {
+        void* ret = nullptr;
+        ( __allocate_impl_helper__( size, align, std::get<Is>( m_allocators ), &ret ), ... );
+        return ret;
+      }
+
+      template< int Sz_, int Align_ >
+      void
+      __allocate_impl_helper__( size_t size, size_t , pool_allocator<Sz_, BlockSize, Align_>& pool, void** ptr ) {
+        if( size == Sz_ ) {
+          *ptr = pool.allocate( size );
+        }
+      }
+
+      template< size_t... Is >
+      void
+      __deallocate_impl__( void* ptr, size_t size, std::index_sequence<Is...> ) {
+        ( __deallocate_impl_helper__( ptr, size, std::get<Is>( m_allocators ) ), ... );
+      }
+
+      template< int Sz_, int Align_ >
+      void
+      __deallocate_impl_helper__( void* ptr, size_t size, pool_allocator<Sz_, BlockSize, Align_>& pool ) {
+        if( size == Sz_ ) {
+          pool.deallocate( ptr );
+        }
       }
 
     };
@@ -161,9 +191,9 @@ namespace geometricks {
     };
 
     template< int BlockSize, typename... Ts >
-    auto make_multipool_allocator( type_t<Ts>... types ) {
+    auto make_multipool_allocator( type_t<Ts>... ) {
       constexpr type_list<> list{};
-      constexpr auto appended = append_unique( list, type<size_align_pair<sizeof(Ts), alignof(Ts)>>... );
+      constexpr auto appended = append_unique( list, type<size_align_pair<sizeof(Ts), alignof( std::max_align_t )>>... );
       return multipool_allocator<BlockSize, decltype( appended )>{};
     }
 
