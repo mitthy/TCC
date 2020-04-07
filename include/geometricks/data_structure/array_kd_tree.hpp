@@ -262,7 +262,9 @@ namespace geometricks {
 
       template< typename Collection >
       Collection&
-      range_search( const T& min_point, const T& max_point, Collection& output_col ) {
+      range_search( T min_point, T max_point, Collection& output_col ) {
+        __organize_data__( min_point, max_point, std::make_index_sequence<DATA_DIMENSIONS>() );
+        __range_search_impl__<0>( min_point, max_point, __root__(), output_col );
         return output_col;
       }
 
@@ -273,6 +275,8 @@ namespace geometricks {
       int32_t m_size;
 
       T* m_data_array;
+
+      static constexpr int DATA_DIMENSIONS = dimension::dimensional_traits<T>::dimensions;
 
       struct node_t {
 
@@ -299,7 +303,7 @@ namespace geometricks {
       template< int Dimension, typename DistanceFunction, typename DistanceType >
       void
       __nearest_neighbor_impl__( const T& point, const node_t& cur_node, T** closest, DistanceType& best_distance, DistanceFunction f ) const {
-        constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
+        constexpr size_t NextDimension = ( Dimension + 1 ) % DATA_DIMENSIONS;
         auto compare_function = [this]( const T& left, const T& right ) {
           return Compare::operator()( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
         };
@@ -381,7 +385,7 @@ namespace geometricks {
                                         uint32_t K,
                                         std::priority_queue<std::pair<T*, DistanceType>, std::vector<std::pair<T*, DistanceType>>, __heap_compare__>& max_heap,
                                         DistanceFunction f ) {
-        constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
+        constexpr size_t NextDimension = ( Dimension + 1 ) % DATA_DIMENSIONS;
         auto compare_function = [this]( const T& left, const T& right ) {
           return Compare::operator()( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
         };
@@ -449,7 +453,7 @@ namespace geometricks {
       void
       __construct_array_kd_tree__( InputIterator begin, Sentinel end, int32_t startind_index, int32_t blocksize ) {
         if( begin != end ) {
-          constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
+          constexpr size_t NextDimension = ( Dimension + 1 ) % DATA_DIMENSIONS;
           auto middle = begin;
           int step = blocksize >> 1;
           int32_t insert_index = startind_index + step;
@@ -498,6 +502,74 @@ namespace geometricks {
       const T&
       __get__( node_t node ) const {
         return m_data_array[ node.m_index ];
+      }
+
+      template< size_t... Is >
+      void
+      __organize_data__( T& first, T& second, std::index_sequence<Is...> ) {
+        ( __swap_if_greater__( dimension::get( first, dimension::dimension_v<Is> ), dimension::get( second, dimension::dimension_v<Is> ) ), ... );
+      }
+
+      template< typename DataType >
+      void
+      __swap_if_greater__( DataType& first, DataType& second ) {
+        if( !Compare::operator()( first, second ) ) {
+          using std::swap;
+          swap( first, second );
+        }
+      }
+
+      template< int CurrentDimension, typename Collection >
+      void
+      __range_search_impl__( const T& min_point, const T& max_point, node_t current_node, Collection& output_collection ) {
+        T& current_point = m_data_array[ current_node.m_index ];
+        constexpr int NextDimension = ( CurrentDimension + 1 ) % DATA_DIMENSIONS;
+        if( Compare::operator()( dimension::get( current_point, dimension::dimension_v<CurrentDimension> ), dimension::get( min_point, dimension::dimension_v<CurrentDimension> ) ) ) {
+          //If we're to the "left" side of the minimum value, we can discard the left children of this node since all of them would be on the left as well.
+          node_t next_node = __right_child__( current_node );
+          if( next_node ) {
+            __range_search_impl__<NextDimension>( min_point, max_point, next_node, output_collection );
+          }
+        }
+        else if( Compare::operator()( dimension::get( max_point, dimension::dimension_v<CurrentDimension> ), dimension::get( current_point, dimension::dimension_v<CurrentDimension> ) ) ) {
+          //If we're to the "right" side of the maximum value, we can discard the right children of this node since all of them would be on the right as well.
+          node_t next_node = __left_child__( current_node );
+          if( next_node ) {
+            __range_search_impl__<NextDimension>( min_point, max_point, next_node, output_collection );
+          }
+        }
+        else {
+          //If we're within the actual range, we have to check both children.
+          //Also, note that we only have to check other dimensions in the actual data if we're actually inside the range. If we're not in the range, it is not needed.
+          if( __is_inside_bounding_box__( current_point, min_point, max_point) ) {
+            meta::add_element( m_data_array[ current_node.m_index ], output_collection );
+          }
+          node_t left_child = __left_child__( current_node );
+          if( left_child ) {
+            __range_search_impl__<NextDimension>( min_point, max_point, left_child, output_collection );
+          }
+          node_t right_child = __right_child__( current_node );
+          if( right_child ) {
+            __range_search_impl__<NextDimension>( min_point, max_point, right_child, output_collection );
+          }
+        }
+      }
+
+      bool
+      __is_inside_bounding_box__( const T& point, const T& min_point, const T& max_point ) {
+        return __is_inside_bounding_box_helper__( point, min_point, max_point, std::make_index_sequence<DATA_DIMENSIONS>{} );
+      }
+
+      template< size_t... Is >
+      bool
+      __is_inside_bounding_box_helper__( const T& point, const T& min_point, const T& max_point, std::index_sequence<Is...> ) {
+        return ( __is_inside_interval__( dimension::get( point, dimension::dimension_v<Is> ), dimension::get( min_point, dimension::dimension_v<Is> ), dimension::get( max_point, dimension::dimension_v<Is> ) ) && ... );
+      }
+
+      template< typename DataType >
+      bool
+      __is_inside_interval__( const DataType& point, const DataType& min, const DataType& max ) {
+        return point >= min && point <= max;
       }
 
     };

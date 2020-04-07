@@ -72,13 +72,13 @@ TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
 TEST( TestArrayKDTree, TestRangeSearch ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
-  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 30 ) );
   input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
   input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
   input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
   input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
   input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
-  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 90 ) );
   input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
   input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
   input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
@@ -89,6 +89,10 @@ TEST( TestArrayKDTree, TestRangeSearch ) {
     input_vector.push_back( std::make_tuple( 1000 + i * randx, 1000 + i * randy, 1000 + i * randz ) );
   }
   kd_tree<std::tuple<int,int,int>> tree( input_vector.begin(), input_vector.end(), geometricks::default_compare, geometricks::memory::malloc_allocator );
+  std::vector<std::tuple<int, int, int>> output_vector;
+  tree.range_search( std::make_tuple( 0, 60, 20 ), std::make_tuple( 100, 40, 53 ), output_vector );
+  //TODO: make this test more robust.
+  EXPECT_EQ( output_vector.size(), 2u );
 }
 
 TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
