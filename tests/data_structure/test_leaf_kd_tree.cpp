@@ -6,7 +6,7 @@
 #include "geometricks/memory/allocator/pool_allocator.hpp"
 
 template< typename T >
-using kd_tree = geometricks::data_structure::leaf_kd_tree<T>;
+using kd_tree = geometricks::leaf_kd_tree<T>;
 
 using namespace geometricks;
 

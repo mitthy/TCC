@@ -5,7 +5,7 @@
 #include "geometricks/memory/allocator/malloc_allocator.hpp"
 
 template< typename T >
-using kd_tree = geometricks::data_structure::array_kd_tree<T>;
+using kd_tree = geometricks::array_kd_tree<T>;
 
 using namespace geometricks;
 
