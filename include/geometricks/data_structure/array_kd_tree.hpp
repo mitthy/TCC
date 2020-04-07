@@ -39,7 +39,7 @@ namespace geometricks {
     */
     template< typename T,
               typename Compare = std::less<> >
-    struct array_kd_tree : Compare {
+    struct array_kd_tree : private Compare {
 
     private:
 
@@ -66,9 +66,17 @@ namespace geometricks {
       * @todo Supply paper on kd tree construction.
       */
       template< typename InputIterator, typename Sentinel >
-      array_kd_tree( InputIterator begin, Sentinel end, geometricks::allocator alloc = geometricks::allocator{} ):  m_allocator( alloc ),
+      array_kd_tree( InputIterator begin, Sentinel end, Compare comp = Compare{}, geometricks::allocator alloc = geometricks::allocator{} ): Compare( comp ),
+                                                                                                                    m_allocator( alloc ),
                                                                                                                     m_size( std::distance( begin, end ) ),
                                                                                                                     m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
+        __construct_array_kd_tree__<0>( begin, end, 0, m_size );
+      }
+
+      template< typename InputIterator, typename Sentinel >
+      array_kd_tree( InputIterator begin, Sentinel end, geometricks::default_compare_t, geometricks::allocator alloc = geometricks::allocator{} ):   m_allocator( alloc ),
+                                                                                                                                        m_size( std::distance( begin, end ) ),
+                                                                                                                                        m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
         __construct_array_kd_tree__<0>( begin, end, 0, m_size );
       }
 
@@ -80,7 +88,8 @@ namespace geometricks {
       * @details Performs a deep copy of the right hand side parameter.
       * @note Complexity: @b O(n)
       */
-      array_kd_tree( const array_kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ):   m_allocator( alloc ),
+      array_kd_tree( const array_kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ):   Compare( rhs ),
+                                                                                                            m_allocator( alloc ),
                                                                                                             m_size( rhs.m_size ),
                                                                                                             m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
         std::copy( rhs.m_data_array, rhs.m_data_array + m_size, m_data_array );
@@ -95,7 +104,8 @@ namespace geometricks {
       * @details Moves the data from rhs into this.
       * @note Complexity: @b O(1)
       */
-      array_kd_tree( array_kd_tree&& rhs ): m_allocator( rhs.m_allocator ),
+      array_kd_tree( array_kd_tree&& rhs ): Compare( std::move( rhs ) ),
+                                            m_allocator( rhs.m_allocator ),
                                             m_size( rhs.m_size ),
                                             m_data_array( rhs.m_data_array ) {
         rhs.m_data_array = nullptr;
@@ -115,6 +125,7 @@ namespace geometricks {
         if( &rhs != this ) {
           //TODO: optimize to only allocate new buffer in case old capacity wasn't enough.
           //TODO: exception guarantee.
+          Compare::operator=( rhs );
           T* new_buff = ( T* ) m_allocator.allocate( sizeof( T ) * rhs.m_size );
           std::copy( rhs.m_data_array, rhs.m_data_array + rhs.m_size, new_buff );
           __destroy__();
@@ -135,6 +146,7 @@ namespace geometricks {
       */
       array_kd_tree& operator=( array_kd_tree&& rhs ) {
         if( &rhs != this ) {
+          Compare::operator=( std::move( rhs ) );
           __destroy__();
           m_data_array = rhs.m_data_array;
           m_size = rhs.m_size;
@@ -248,6 +260,12 @@ namespace geometricks {
         return output_col;
       }
 
+      template< typename Collection >
+      Collection&
+      range_search( const T& min_point, const T& max_point, Collection& output_col ) {
+        return output_col;
+      }
+
     private:
 
       geometricks::allocator m_allocator;
@@ -268,10 +286,6 @@ namespace geometricks {
 
       };
 
-      struct compare_t {
-
-      };
-
       void
       __destroy__() {
         if( m_data_array != nullptr ) {
@@ -286,9 +300,8 @@ namespace geometricks {
       void
       __nearest_neighbor_impl__( const T& point, const node_t& cur_node, T** closest, DistanceType& best_distance, DistanceFunction f ) const {
         constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
-        auto compare_function = []( const T& left, const T& right ) {
-          Compare comp{};
-          return comp( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
+        auto compare_function = [this]( const T& left, const T& right ) {
+          return Compare::operator()( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
         };
         auto distance_function = [ &f ]( auto&& lhs, auto&& rhs ) {
           constexpr int I = Dimension;
@@ -369,9 +382,8 @@ namespace geometricks {
                                         std::priority_queue<std::pair<T*, DistanceType>, std::vector<std::pair<T*, DistanceType>>, __heap_compare__>& max_heap,
                                         DistanceFunction f ) {
         constexpr size_t NextDimension = ( Dimension + 1 ) % dimension::dimensional_traits<T>::dimensions;
-        auto compare_function = []( const T& left, const T& right ) {
-          Compare comp{};
-          return comp( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
+        auto compare_function = [this]( const T& left, const T& right ) {
+          return Compare::operator()( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
         };
 
         auto distance_function = [ &f ]( auto&& lhs, auto&& rhs ) {
@@ -442,9 +454,8 @@ namespace geometricks {
           int step = blocksize >> 1;
           int32_t insert_index = startind_index + step;
           std::advance( middle, step );
-          auto less_function = []( const T& left, const T& right ) {
-            Compare comp{};
-            return comp( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
+          auto less_function = [this]( const T& left, const T& right ) {
+            return Compare::operator()( dimension::get( left, dimension::dimension_v<Dimension> ), dimension::get( right, dimension::dimension_v<Dimension> ) );
           };
           std::nth_element( begin, middle ,end, less_function );
           new ( &m_data_array[ insert_index ] ) T{ *middle };

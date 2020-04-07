@@ -2,6 +2,7 @@
 #include "geometricks/data_structure/array_kd_tree.hpp"
 #include <vector>
 #include <tuple>
+#include "geometricks/memory/allocator/malloc_allocator.hpp"
 
 template< typename T >
 using kd_tree = geometricks::data_structure::array_kd_tree<T>;
@@ -66,6 +67,28 @@ TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
     ( void ) nearest;
     ( void ) distance;
   }
+}
+
+TEST( TestArrayKDTree, TestRangeSearch ) {
+  std::vector<std::tuple<int, int, int>> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
+  input_vector.push_back( std::make_tuple( 0, 49, 87 ) );
+  input_vector.push_back( std::make_tuple( 13, 11, 12 ) );
+  input_vector.push_back( std::make_tuple( 10, 9, 11 ) );
+  input_vector.push_back( std::make_tuple( 49, 50, 53 ) );
+  input_vector.push_back( std::make_tuple( 50, 50, 54 ) );
+  input_vector.push_back( std::make_tuple( 48, 50, 49 ) );
+  input_vector.push_back( std::make_tuple( 44, 78, 67 ) );
+  input_vector.push_back( std::make_tuple( 20, 24, 23 ) );
+  input_vector.push_back( std::make_tuple( 22, 22, 22 ) );
+  for( int i = 0; i < 200000; ++i ) {
+    int randx = rand() % 20000 ;
+    int randy = rand() % 20000 ;
+    int randz = rand() % 20000 ;
+    input_vector.push_back( std::make_tuple( 1000 + i * randx, 1000 + i * randy, 1000 + i * randz ) );
+  }
+  kd_tree<std::tuple<int,int,int>> tree( input_vector.begin(), input_vector.end(), geometricks::default_compare, geometricks::memory::malloc_allocator );
 }
 
 TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {

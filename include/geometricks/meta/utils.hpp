@@ -5,6 +5,8 @@
 
 namespace geometricks {
 
+  struct default_compare_t {} default_compare;
+
   namespace meta {
 
     //Helper metafunction that wraps a result in a named type type.

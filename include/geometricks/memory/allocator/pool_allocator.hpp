@@ -134,7 +134,7 @@ namespace geometricks {
     }
 
     template< int BlockSize, typename... T >
-    struct multipool_allocator;
+    struct multipool_allocator;  //This class is super awkward to use so far with node based strucutres that you can't know the node size without inspecting it beforehand.
 
     template< int BlockSize, int... Sz, int... Align >
     class multipool_allocator<BlockSize, size_align_pair<Sz, Align>...> {
