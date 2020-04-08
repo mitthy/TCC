@@ -23,6 +23,11 @@
 
 namespace geometricks {
 
+  /**
+  * @cond EXCLUDE_DOXYGEN
+  *
+  * Internal not to be documented
+  */
   namespace __detail__ {
 
     template< typename Underlying,
@@ -117,6 +122,11 @@ namespace geometricks {
     };
 
   }
+  /**
+  * @endcond
+  *
+  * Internal not to be documented
+  */
 
   struct mean_split_function {
 

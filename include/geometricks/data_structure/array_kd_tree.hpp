@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <queue>
+#include <vector>
 
 //Project includes
 #include "dimensional_traits.hpp"
@@ -188,7 +189,7 @@ namespace geometricks {
     * @code{.cpp}
     * std::vector<std::tuple<int, int, int>> input_vector;
       ...
-      geometricks::data_structure::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+      geometricks::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
       struct manhattan_distance_t {
         template< typename T, int N >
         size_t operator()( const T& lhs, const T& rhs, dimension::dimension_t<N> ) {
@@ -203,7 +204,7 @@ namespace geometricks {
           return ( this->operator()( lhs, rhs, dimension_v<I> ) + ... );
         }
       };
-      auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ), manhattan_distance_t );
+      auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( 10, 10, 10 ), manhattan_distance_t{} );
     * @endcode
     * @todo Add references.
     * @todo Add complexity.
@@ -220,22 +221,21 @@ namespace geometricks {
     }
 
     /**
-    * @brief Finds the k nearest neighbors of an input point and returns a collection.
+    * @brief Finds the k nearest neighbors of an input point and returns a vector containing them and their distances.
     * @param point The input point to query.
     * @param K the number of desired output points.
-    * @param output_col The output collection to hold the points.
     * @param f Point distance function object. Should be able to compare 2 points and return a size type as well as
     * compare 2 points in a specific dimension and return a size type with the following signature: operator()( const T& left, T& right, dimension::dimension_t<Index> ) const noexcept.
     * Also, distance( point1, point2 ) should be equal to distance( point2, point1 ).
-    * @return A reference to the collection output_col.
+    * @return A vector containing the output points as well as the distance calculated from the input point.
     * @details Computes the k nearest neighbor of a given input point given the distance function. The default distance is the euclidean distance of the points without computing
     * the square root to save on efficiency, since if sqrt( euclid_distance_no_sqrt_root(a, b) < euclid_distance_no_sqrt_root(a, c) ), euclid_distance_no_sqrt_root(a, b) < euclid_distance_no_sqrt_root(a, c).
-    * The points are returned in an unspecified order.
+    * The points are returned in ascending order.
     * Example:
     * @code{.cpp}
     * std::vector<std::tuple<int, int, int>> input_vector;
       ...
-      geometricks::data_structure::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+      geometricks::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
       struct manhattan_distance_t {
         template< typename T, int N >
         size_t operator()( const T& lhs, const T& rhs, dimension::dimension_t<N> ) {
@@ -260,11 +260,13 @@ namespace geometricks {
     * @todo Allow alternative version of this function to receive the number of neighbors as a template parameter. Could be useful with a stack allocated vector.
     * @todo Make a new version of this function that doesn't require an output_col as a parameter but simply returns a vector.
     */
-    template< typename Collection, typename DistanceFunction = dimension::default_nearest_neighbour_function >
-    Collection&
-    k_nearest_neighbor( const T& point, uint32_t K, Collection& output_col, DistanceFunction f = DistanceFunction{} ) {
+    template< typename DistanceFunction = dimension::default_nearest_neighbour_function >
+    auto
+    k_nearest_neighbor( const T& point, uint32_t K, DistanceFunction f = DistanceFunction{} ) ->
+    std::vector<std::pair<T, std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>>> {
       using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
-      static_assert( std::is_same_v<typename Collection::value_type, std::pair<T, distance_t>> );
+      std::vector<std::pair<T, distance_t>> output_col;
+      output_col.reserve( K );
       std::priority_queue<std::pair<T*, distance_t>, std::vector<std::pair<T*, distance_t>>, __heap_compare__> max_heap;
       __k_nearest_neighbor_impl__<0, DistanceFunction, distance_t>( point, __root__(), K, max_heap, f );
       while( !max_heap.empty() ) {
@@ -272,6 +274,7 @@ namespace geometricks {
         meta::add_element( std::make_pair( *element.first, element.second ), output_col );
         max_heap.pop();
       }
+      std::reverse( output_col.begin(), output_col.end() );
       return output_col;
     }
 
@@ -279,13 +282,22 @@ namespace geometricks {
     * @brief Performs a range query on the collection.
     * @param min_point Data containing the minimum values of the query.
     * @param max_point Data containing the maximum values of the query.
-    * @param output_col Output collection.
-    * @return The output collection.
-    * @todo Allow the user to input don't care values into the minimum and maximum point. Would need a new data structure for that. 
+    * @return Vector containing all points in range.
+    * @details Computes and gathers all given points that lie within the region min_point and max_point and outputs them in a vector.
+    * Since the majority of the time is spent searching the tree for the output points, the algorithm first preprocess the input data so that there is no need for a precondition
+    * that the minimum point contains all the minimum values. Instead, the algorithm sorts both points before processing.
+    * Example:
+    * @code{.cpp}
+    std::vector<std::tuple<int, int, int>> input_vector;
+    ...
+    geometricks::array_kd_tree<std::tuple<int, int, int>> tree( input_vector.begin(), input_vector.end() );
+    auto output_vector = tree.range_search( std::make_tuple( 0, 50, 300 ), std::make_tuple( 57, 51, 500 ) ); //output_vector now contains all points between [0-57, 50-51, 300-500] from tree.
+    @endcode
+    * @todo Allow the user to input don't care values into the minimum and maximum point. Would need a new data structure for that.
     */
-    template< typename Collection >
-    Collection&
-    range_search( T min_point, T max_point, Collection& output_col ) {
+    std::vector<T>
+    range_search( T min_point, T max_point ) {
+      std::vector<T> output_col;
       __organize_data__( min_point, max_point, std::make_index_sequence<DATA_DIMENSIONS>() );
       __range_search_impl__<0>( min_point, max_point, __root__(), output_col );
       return output_col;
