@@ -21,6 +21,47 @@ namespace geometricks {
 
     namespace allocator_customization {
 
+      /**
+      * @brief Adaptor struct that should be specialized for types that can allocate and deallocate memory but don't conform to the interface of the library.
+      * @tparam T Template parameter that should be specialized.
+      * @details The specialization of this struct should contain at least 1 function to allocate memory and 1 function to deallocate memory.
+
+      * Functions to allocate memory should comform to the following interface
+      * @code{.cpp}
+        struct my_allocator_t { ... };
+        namespace geometricks::memory::allocator_customization {
+          struct allocator<my_allocator_t> {
+
+            //Can be either this function in case of aligned memory.
+            void* allocate( size_t, size_t );
+
+            //Or this function in case of unaligned memory.
+            void* allocate( size_t );
+
+            ...
+
+          };
+        }
+      * @endcode
+
+      * Functions to deallocate memory should comform to the following interface
+      * @code{.cpp}
+        struct my_allocator_t { ... };
+        namespace geometricks::memory::allocator_customization {
+          struct allocator<my_allocator_t> {
+
+            //Can be either this function in case there is a need to know the size of the element.
+            void* allocate( void*, size_t );
+
+            //Or this function otherwise.
+            void deallocate( void* );
+
+            ...
+
+          };
+        }
+      * @endcode
+      */
       template< typename T >
       struct allocator;
 
@@ -227,9 +268,20 @@ namespace geometricks {
     /**
     * @endcond
     *
-    * Internal not to be documented
     */
 
+    /**
+    * @brief A variable that indicates whenever a type is an allocator or not.
+    * @tparam T The type to query.
+    * @details A type is considered an allocator if it can both allocate and deallocate memory.
+    * For the memory allocation part, a type must either have a member allocate or alloc function or it must have non members allocate or alloc functions.
+    * Those functions should allocate either with 2 parameters, the size and alignment of the allocation or just the size of the allocation.
+    * In case no such functions exist, see geometricks::memory::allocator_customization::alocator.
+    *
+    * For the memory deallocation part, a type must either have a member deallocate or dealloc function or it must have non members deallocate or dealloc functions.
+    * Those functions should deallocate either with 2 parameters, the pointer and size of the deallocation or just the pointer to deallocate.
+    * In case no such functions exist, see geometricks::memory::allocator_customization::alocator.
+    */
     template< typename T >
     constexpr bool is_allocator = __detail__::__can_allocate__<T> && __detail__::__can_deallocate__<T>;
 
@@ -277,8 +329,32 @@ namespace geometricks {
 
     allocator get_default_allocator();
 
-    template< typename Allocator >
-    void set_default_allocator( Allocator& );
+    /**
+    * @brief Sets the default allocator type.
+    * @tparam T A type that must conform to the allocator interface. See @ref is_allocator.
+    * @param alloc The allocator we want to set as the default allocator.
+    * @details Sets the default allocator to be used by all default constructed geometricks::allocator.
+    * Since all allocators are implemented as views, be extra careful not to make the default allocator end its lifetime prematurely
+    * or terrible things could happen. This function can also be used to temporarely change the default allocator back and forth.
+    * Example:
+    * @code{.cpp}
+      struct stack_allocator_t {
+        ...
+      }; //Allocates objects on the stack
+      auto current_default = geometricks::memory::get_default_allocator();
+      stack_allocator_t stack_alloc{};
+      geometricks::memory::set_default_allocator( stack_alloc ); //DANGER! MAKE SURE TO SET THE DEFAULT ALLOCATOR BACK OR FACE THE CONSEQUENCES!!!!
+      std::vector<std::tuple<float,int,double>> input_vector;
+      ...
+      geometricks::kd_tree<std::tuple<float,int,double>> tree( input_vector.begin(), input_vector.end() ); //KD Tree memory is entirely on the stack now.
+      //Note the same effect could be used just passing the stack allocator to the tree constructor in this case.
+      ...
+      geometricks::memory::set_default_allocator( current_default );  //WE'RE SAVED!
+    * @endcode
+    * @note The default allocator on startup is set to @ref geometricks::memory::new_allocator_t "new_allocator".
+    */
+    template< typename T >
+    void set_default_allocator( T& alloc );
 
     void set_default_allocator( allocator& allocator );
 
@@ -322,17 +398,26 @@ namespace geometricks {
 
     /**
     * @brief Default constructs an allocator view, using the default allocator as the allocator.
-    * @see @ref geometricks::memory::set_default_allocator(Allocator&).
+    * @see @ref geometricks::memory::set_default_allocator().
     * @see @ref geometricks::memory::get_default_allocator().
     */
     allocator(): m_allocator( memory::__detail__::__default_allocator__ ), m_table( memory::__detail__::__default_v_table__ ) {
     }
 
+    /**
+    * @brief Constructs a view to an allocator.
+    * @tparam Allocator A type that conforms to the allocator interface.
+    * @param alloc The allocator itself.
+    * @note This is not the copy constructor.
+    */
     template< typename Allocator, typename Void = std::enable_if_t< !std::is_same_v< std::decay_t<Allocator>, allocator > > >
     allocator( Allocator& alloc ): m_allocator( ( void* ) &alloc ), m_table( memory::__detail__::__make_v_table__<Allocator>() ) {
       static_assert( memory::is_allocator<Allocator> );
     }
 
+    /**
+    * @brief Constructs a view from another view, with both of them pointing to the same allocator.
+    */
     allocator( const allocator& other ): m_allocator( other.m_allocator ), m_table( other.m_table ) {
     }
 
@@ -340,24 +425,52 @@ namespace geometricks {
 
     friend void memory::set_default_allocator( allocator& allocator );
 
+    /**
+    * @brief Allocates aligned memory.
+    * @param sz The size of the allocation.
+    * @param align The alignment of the allocation.
+    * @returns Aligned raw bytes of memory of size sz.
+    */
     void* allocate( size_t sz, size_t align ) {
       return m_table->__allocate__( m_allocator, sz, align );
     }
 
+    /**
+    * @brief Allocates memory aligned to the maximum alignment type.
+    * @param sz The size of the allocation.
+    * @returns Raw bytes of memory of size sz.
+    */
     void* allocate( size_t sz ) {
       return m_table->__allocate__( m_allocator, sz, alignof( std::max_align_t ) );
     }
 
+    /**
+    * @brief Deallocates memory.
+    * @param ptr Pointer to memory we want to deallocate.
+    * @param size Size of the allocation. Useful for allocators like multipool allocators.
+    */
     void deallocate( void* ptr, size_t size = 0 ) {
       m_table->__deallocate__( m_allocator, ptr, size );
     }
 
+    /**
+    * @brief Compares the view to an allocator.
+    * @tparam Allocator A type that conforms to the allocator interface.
+    * @param alloc The allocator.
+    * @returns true if the view points to the allocator. false otherwise.
+    */
     template< typename Allocator >
     bool operator==( const Allocator& alloc ) const {
+      static_assert( memory::is_allocator<Allocator> );
       //TODO: pass it to the correct type, maybe?
       return m_allocator == ( void* )( &alloc );
     }
 
+    /**
+    * @brief Compares 2 views to allocators.
+    * @param other The other allocator.
+    * @returns true if both views point to the same allocator. false otherwise.
+    */
     bool operator==( const allocator& other ) const {
       return m_allocator == other.m_allocator;
     }
@@ -373,18 +486,34 @@ namespace geometricks {
 
   };
 
+  /**
+  * @brief Free function for allocate.
+  * @see geometricks::memory::allocate( size_t, size_t ).
+  */
   void* allocate( allocator& alloc, size_t sz, size_t align ) {
     return alloc.allocate( sz, align );
   }
 
+  /**
+  * @brief Free function for allocate.
+  * @see geometricks::memory::allocate( size_t ).
+  */
   void* allocate( allocator& alloc, size_t sz ) {
     return alloc.allocate( sz );
   }
 
+  /**
+  * @brief Free function for deallocate.
+  * @see geometricks::memory::deallocate( void*, size_t ).
+  */
   void deallocate( allocator& alloc, void* ptr ) {
     alloc.deallocate( ptr );
   }
 
+  /**
+  * @brief Free function for deallocate.
+  * @see geometricks::memory::deallocate( void*, size_t ).
+  */
   void deallocate( allocator& alloc, void* ptr, size_t size ) {
     alloc.deallocate( ptr, size );
   }
@@ -393,8 +522,8 @@ namespace geometricks {
 
     /**
     * @brief Returns the default allocator.
-    * @returns A view to the default allocator set by geometricks::memory::set_default_allocator(Allocator&). If none was set, returns the operator new allocator.
-    * @details After a call to @ref geometricks::memory::set_default_allocator "set_default_allocator()", returns a geometricks::allocator view to the default allocator.
+    * @returns A view to the default allocator set by @ref set_default_allocator(). If none was set, returns the operator new allocator.
+    * @details After a call to @ref set_default_allocator(), returns a geometricks::allocator view to the default allocator.
     * @note The default allocator at program startup is always set to operator new.
     * @see geometricks::memory::new_allocator_t.
     */
@@ -402,14 +531,11 @@ namespace geometricks {
       return allocator{ __detail__::__default_allocator__, __detail__::__default_v_table__ };
     }
 
-    /**
-    * @brief TODO
-    */
-    template< typename Allocator >
-    void set_default_allocator( Allocator& allocator ) {
-      static_assert( is_allocator<Allocator> );
+    template< typename T >
+    void set_default_allocator( T& allocator ) {
+      static_assert( is_allocator<T> );
       __detail__::__default_allocator__ = ( void* ) &allocator;
-      __detail__::__default_v_table__ = __detail__::__make_v_table__<Allocator>();
+      __detail__::__default_v_table__ = __detail__::__make_v_table__<T>();
     }
 
     void set_default_allocator( allocator& allocator ) {

@@ -576,7 +576,7 @@ namespace geometricks {
       else {
         //If we're within the actual range, we have to check both children.
         //Also, note that we only have to check other dimensions in the actual data if we're actually inside the range. If we're not in the range, it is not needed.
-        if( __is_inside_bounding_box__( current_point, min_point, max_point) ) {
+        if( __is_inside_bounding_box__<CurrentDimension>( current_point, min_point, max_point) ) {
           meta::add_element( m_data_array[ current_node.m_index ], output_collection );
         }
         node_t left_child = __left_child__( current_node );
@@ -590,21 +590,27 @@ namespace geometricks {
       }
     }
 
-    bool
+    template< int CurrentDimension >
+    constexpr bool
     __is_inside_bounding_box__( const T& point, const T& min_point, const T& max_point ) {
-      return __is_inside_bounding_box_helper__( point, min_point, max_point, std::make_index_sequence<DATA_DIMENSIONS>{} );
+      return __is_inside_bounding_box_helper__<CurrentDimension>( point, min_point, max_point, std::make_index_sequence<DATA_DIMENSIONS>{} );
     }
 
-    template< size_t... Is >
-    bool
+    template< int CurrentDimension, size_t... Is >
+    constexpr bool
     __is_inside_bounding_box_helper__( const T& point, const T& min_point, const T& max_point, std::index_sequence<Is...> ) {
-      return ( __is_inside_interval__( dimension::get( point, dimension::dimension_v<Is> ), dimension::get( min_point, dimension::dimension_v<Is> ), dimension::get( max_point, dimension::dimension_v<Is> ) ) && ... );
+      return ( __is_inside_interval__<CurrentDimension, Is>( dimension::get( point, dimension::dimension_v<Is> ), dimension::get( min_point, dimension::dimension_v<Is> ), dimension::get( max_point, dimension::dimension_v<Is> ) ) && ... );
     }
 
-    template< typename DataType >
-    bool
+    template< int CurrentDimension, int Index, typename DataType >
+    constexpr bool
     __is_inside_interval__( const DataType& point, const DataType& min, const DataType& max ) {
-      return point >= min && point <= max;
+      if constexpr( CurrentDimension == Index ) {
+        return true;
+      }
+      else {
+        return point >= min && point <= max;
+      }
     }
 
   };
