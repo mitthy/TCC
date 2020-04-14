@@ -29,12 +29,11 @@ namespace geometricks {
   * It also stores the elements in the nodes, not just in the leaves, giving it less flexibility than other types of kd trees.
   * Since it is extremely hard to balance a kd tree and it hurts performance to build a new one in each element insertion, insertion opperations are not allowed.
   * @see leaf_kd_tree for a leaf based kd tree.
+  * @see geometricks::dimension::dimensional_traits and @ref geometricks::dimension::get_t "geometricks::dimension::get" for a guide on how to use this struct with user defined types.
   * @see https://en.wikipedia.org/wiki/K-d_tree for a quick reference on kd tree.
   * @todo Static assert on compare so we know it can sort in all dimensions.
-  * @todo Implement range search operations.
   * @todo noexcept and constexpr anotations.
   * @todo Add threshold neighbors to find all elements below threshold distance to efficiently implement collision detection algorithms.
-  * @todo Make this class allocator aware with library defined custom allocators.
   */
   template< typename T,
             typename Compare = std::less<> >
@@ -210,7 +209,7 @@ namespace geometricks {
     * @todo Add complexity.
     * @todo Allow searching for threshold on nearest neighbor. Could be useful for code like collision detection.
     */
-    template< typename DistanceFunction = dimension::default_nearest_neighbour_function >
+    template< typename DistanceFunction = dimension::euclidean_distance >
     auto
     nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
       using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
@@ -250,8 +249,7 @@ namespace geometricks {
           return ( this->operator()( lhs, rhs, dimension_v<I> ) + ... );
         }
       };
-      std::vector<std::pair<std::tuple<int, int, int>, size_t>> output_vector;
-      tree.k_nearest_neighbor( std::make_tuple( 10, 10, 10 ), 4, output_vector, manhattan_distance_t{} ); //output_vector now contains the 4 nearest neighbors of [10, 10, 10].
+      auto output_vector = tree.k_nearest_neighbor( std::make_tuple( 10, 10, 10 ), 4, manhattan_distance_t{} ); //output_vector now contains the 4 nearest neighbors of [10, 10, 10].
     * @endcode
     * @todo Add references.
     * @todo Add complexity.
@@ -260,7 +258,7 @@ namespace geometricks {
     * @todo Allow alternative version of this function to receive the number of neighbors as a template parameter. Could be useful with a stack allocated vector.
     * @todo Make a new version of this function that doesn't require an output_col as a parameter but simply returns a vector.
     */
-    template< typename DistanceFunction = dimension::default_nearest_neighbour_function >
+    template< typename DistanceFunction = dimension::euclidean_distance >
     auto
     k_nearest_neighbor( const T& point, uint32_t K, DistanceFunction f = DistanceFunction{} ) ->
     std::vector<std::pair<T, std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>>> {

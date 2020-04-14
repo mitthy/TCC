@@ -220,7 +220,7 @@ namespace geometricks {
       if( m_head  ) __remove_node__( m_head );
     }
 
-    template< typename DistanceFunction = dimension::default_nearest_neighbour_function >
+    template< typename DistanceFunction = dimension::euclidean_distance >
     decltype( auto )
     nearest_neighbor( const T& point, DistanceFunction f = DistanceFunction{} ) const noexcept {
       using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
@@ -230,7 +230,7 @@ namespace geometricks {
       return std::pair<const T&, distance_t>( *ret, best_distance );
     }
 
-    template< typename DistanceFunction = dimension::default_nearest_neighbour_function,
+    template< typename DistanceFunction = dimension::euclidean_distance,
               typename Collection >
     Collection&
     k_nearest_neighbor( const T& point, uint32_t K, Collection& output, DistanceFunction f = DistanceFunction{} ) const noexcept {

@@ -2,6 +2,7 @@
 #include "geometricks/data_structure/array_kd_tree.hpp"
 #include <vector>
 #include <tuple>
+#include <array>
 #include "geometricks/memory/allocator/malloc_allocator.hpp"
 
 template< typename T >
@@ -66,6 +67,75 @@ TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
     auto [nearest, distance] = tree.nearest_neighbor( std::make_tuple( randx, randy, randz ) );
     ( void ) nearest;
     ( void ) distance;
+  }
+}
+
+namespace dummy {
+
+  struct dummy {
+
+    int first;
+
+    int second;
+
+    int third;
+
+    constexpr bool operator==( const dummy& other ) const {
+      return first == other.first && second == other.second && third == other.third;
+    }
+
+  };
+
+}
+
+namespace geometricks::dimension::get_customization {
+
+  template<>
+  struct get<dummy::dummy> {
+
+    static int _( const dummy::dummy& d, geometricks::dimension::dimension_t<0> ) {
+      return d.first;
+    }
+
+    static int _( const dummy::dummy& d, geometricks::dimension::dimension_t<1> ) {
+      return d.second;
+    }
+
+    static int _( const dummy::dummy& d, geometricks::dimension::dimension_t<2> ) {
+      return d.third;
+    }
+  };
+
+}
+
+namespace geometricks::dimension {
+
+  template<>
+  struct dimensional_traits<dummy::dummy> {
+    static constexpr int dimensions = 3;
+  };
+
+}
+
+TEST( TestArrayKDTree, TestDataCustomization ) {
+  std::vector<dummy::dummy> input_vector;
+  input_vector.reserve( 10 );
+  input_vector.push_back( { 50, 50, 50 } );
+  input_vector.push_back( { 0, 49, 87 } );
+  input_vector.push_back( { 13, 11, 12 } );
+  input_vector.push_back( { 10, 9, 11 } );
+  input_vector.push_back( { 49, 50, 53 } );
+  input_vector.push_back( { 50, 50, 54 } );
+  input_vector.push_back( { 48, 50, 49 } );
+  input_vector.push_back( { 44, 78, 67 } );
+  input_vector.push_back( { 20, 24, 23 } );
+  input_vector.push_back( { 22, 22, 22 } );
+  kd_tree<dummy::dummy> tree( input_vector.begin(), input_vector.end() );
+  {
+    auto [nearest, distance] = tree.nearest_neighbor( { 10, 10, 10 } );
+    auto expected = dummy::dummy{ 10, 9, 11 };
+    EXPECT_EQ( nearest, expected );
+    EXPECT_EQ( distance, 2u );
   }
 }
 
