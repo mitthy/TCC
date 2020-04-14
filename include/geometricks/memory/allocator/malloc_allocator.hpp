@@ -17,6 +17,11 @@ namespace geometricks {
       return malloc( sz );
     }
 
+    void*
+    reallocate( malloc_allocator_t&, void* ptr, size_t sz ) {
+      return realloc( ptr, sz );
+    }
+
     void
     deallocate( malloc_allocator_t&, void* ptr ) {
       free( ptr );

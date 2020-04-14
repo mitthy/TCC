@@ -84,7 +84,7 @@ set( GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES
 target_sources( GeometricksDataStructure INTERFACE ${GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES} )
 target_include_directories( GeometricksDataStructure INTERFACE include/ )
 target_compile_features( GeometricksDataStructure INTERFACE cxx_std_17 )
-target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming )
+target_link_libraries( GeometricksDataStructure INTERFACE GeometricksAlgorithm GeometricksMetaProgramming GeometricksMemory )
 
 set( CMAKE_CXX_FLAGS_RELEASE "-O3" )
 
