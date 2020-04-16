@@ -20,16 +20,16 @@ namespace geometricks {
 
     using const_iterator = const T*;
 
-    template< typename... Args >
     void
-    push_back( Args&&... args ) {
+    push_back( const T& element ) {
       if( m_size == m_capacity ) {
         __grow__( m_capacity * 2 );
       }
-      new ( &m_data[ m_size++ ] ) T( std::forward<Args>( args )... );
+      new ( &m_data[ m_size++ ] ) T( element );
     }
 
-    void pop_back() {
+    void
+    pop_back() {
       m_data[ --m_size ].~T();
     }
 
