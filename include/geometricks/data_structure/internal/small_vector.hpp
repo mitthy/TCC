@@ -66,12 +66,8 @@ namespace geometricks {
     iterator
     erase( const_iterator begin, const_iterator last ) {
       iterator old = ( iterator )begin;
-      int distance = 0;
-      while( begin != last ) {
-        ++distance;
-        begin->~T();
-        ++begin;
-      }
+      int distance = last - begin;
+      __destroy__( begin, last );
       std::move( last, static_cast<const_iterator>( end() ), old );
       m_size -= distance;
       return old;
@@ -197,7 +193,7 @@ namespace geometricks {
     }
 
     void
-    __destroy__( T* begin, T* end ) {
+    __destroy__( const T* begin, const T* end ) {
       if constexpr( !std::is_trivially_destructible_v<T> ) {
         while( begin != end ) {
           begin->~T();
