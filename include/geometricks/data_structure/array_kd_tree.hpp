@@ -12,6 +12,7 @@
 #include "dimensional_traits.hpp"
 #include "geometricks/meta/utils.hpp"
 #include "geometricks/memory/allocator.hpp"
+#include "internal/small_vector.hpp"
 
 /**
 * @file Implements a cache friendly kd tree stored as an array.
@@ -265,7 +266,7 @@ namespace geometricks {
       using distance_t = std::decay_t<decltype(f( std::declval<T>(), std::declval<T>() ))>;
       std::vector<std::pair<T, distance_t>> output_col;
       output_col.reserve( K );
-      std::priority_queue<std::pair<T*, distance_t>, std::vector<std::pair<T*, distance_t>>, __heap_compare__> max_heap;
+      std::priority_queue<std::pair<T*, distance_t>, small_vector<std::pair<T*, distance_t>, 11>, __heap_compare__> max_heap;
       __k_nearest_neighbor_impl__<0, DistanceFunction, distance_t>( point, __root__(), K, max_heap, f );
       while( !max_heap.empty() ) {
         auto& element = max_heap.top();
@@ -416,7 +417,7 @@ namespace geometricks {
     void __k_nearest_neighbor_impl__( const T& point,
                                       const node_t& node,
                                       uint32_t K,
-                                      std::priority_queue<std::pair<T*, DistanceType>, std::vector<std::pair<T*, DistanceType>>, __heap_compare__>& max_heap,
+                                      std::priority_queue<std::pair<T*, DistanceType>, small_vector<std::pair<T*, DistanceType>, 11>, __heap_compare__>& max_heap,
                                       DistanceFunction f ) {
       constexpr size_t NextDimension = ( Dimension + 1 ) % DATA_DIMENSIONS;
       auto compare_function = [this]( const T& left, const T& right ) {
@@ -450,13 +451,13 @@ namespace geometricks {
         auto distance = f( point, m_data_array[ node.m_index ] );
         auto heap_element = std::make_pair( &m_data_array[ node.m_index ], distance );
         max_heap.push( heap_element );
-        if( max_heap.size() > K ) {
+        if( ( uint32_t )max_heap.size() > K ) {
           max_heap.pop();
         }
         auto right_child = __right_child__( node );
         if( right_child ) {
           auto distance_to_hyperplane = distance_function( point, m_data_array[ node.m_index ] );
-          if( max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
+          if( ( uint32_t )max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
             __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, right_child, K, max_heap, f );
           }
         }
@@ -469,13 +470,13 @@ namespace geometricks {
         auto distance = f( point, m_data_array[ node.m_index ] );
         auto heap_element = std::make_pair( &m_data_array[ node.m_index ], distance );
         max_heap.push( heap_element );
-        if( max_heap.size() > K ) {
+        if( ( uint32_t )max_heap.size() > K ) {
           max_heap.pop();
         }
         auto left_child = __left_child__( node );
         if( left_child ) {
           auto distance_to_hyperplane = distance_function( point, m_data_array[ node.m_index ] );
-          if( max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
+          if( ( uint32_t )max_heap.size() < K || distance_to_hyperplane < max_heap.top().second ) {
             __k_nearest_neighbor_impl__<NextDimension, DistanceFunction, DistanceType>( point, left_child, K, max_heap, f );
           }
         }

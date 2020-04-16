@@ -20,12 +20,26 @@ namespace geometricks {
 
     using const_iterator = const T*;
 
+    using value_type = T;
+
+    using reference = T&;
+
+    using const_reference = const T&;
+
+    using size_type = int;
+
     void
     push_back( const T& element ) {
-      if( m_size == m_capacity ) {
+      if( m_size == ( int )m_capacity ) {
         __grow__( m_capacity * 2 );
       }
-      new ( &m_data[ m_size++ ] ) T( element );
+      if constexpr( std::is_trivially_copyable_v<T> ) {
+        memcpy( ( void* )&m_data[ m_size ], ( void* )&element, sizeof(T) );
+      }
+      else {
+        new ( &m_data[ m_size ] ) T( element );
+      }
+      ++m_size;
     }
 
     void
@@ -44,7 +58,7 @@ namespace geometricks {
     erase( const_iterator pos ) {
       pos->~T();
       iterator old = ( iterator )pos++;
-      std::copy( std::make_move_iterator( pos ), std::make_move_iterator( static_cast<const_iterator>(end() ) ), old );
+      std::move( pos, static_cast<const_iterator>( end() ), old );
       --m_size;
       return old;
     }
@@ -58,7 +72,7 @@ namespace geometricks {
         begin->~T();
         ++begin;
       }
-      std::copy( std::make_move_iterator( last ), std::make_move_iterator( static_cast<const_iterator>( end() ) ), old );
+      std::move( last, static_cast<const_iterator>( end() ), old );
       m_size -= distance;
       return old;
     }
@@ -123,6 +137,31 @@ namespace geometricks {
       }
     }
 
+    T&
+    front() {
+      return *m_data;
+    }
+
+    const T&
+    front() const {
+      return *m_data;
+    }
+
+    T&
+    back() {
+      return m_data[ m_size - 1 ];
+    }
+
+    const T&
+    back() const {
+      return m_data[ m_size - 1 ];
+    }
+
+    bool
+    empty() const {
+      return !m_size;
+    }
+
   protected:
 
     vector( int capacity, geometricks::allocator alloc ): m_data( __get_stack_address__() ), m_size( 0 ), m_capacity( capacity ), m_allocator( alloc ) {}
@@ -164,6 +203,10 @@ namespace geometricks {
           begin->~T();
           ++begin;
         }
+      }
+      else {
+        ( void )begin;
+        ( void )end;
       }
     }
 
