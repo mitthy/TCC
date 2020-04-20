@@ -14,8 +14,6 @@ namespace geometricks {
   template< typename T >
   struct vector {
 
-    vector() = delete;
-
     using iterator = T*;
 
     using const_iterator = const T*;
@@ -27,6 +25,69 @@ namespace geometricks {
     using const_reference = const T&;
 
     using size_type = int;
+
+    vector() = delete;
+
+    vector& operator=( const vector& rhs ) {
+      if( &rhs != this ) {
+        if( size() >= rhs.size() ) {
+          auto it = std::copy( rhs.begin(), rhs.end(), begin() );
+          __destroy__( it, end() );
+        }
+        else {
+          if( m_capacity < rhs.size() ) {
+            __destroy__( begin(), end() );
+            m_size = 0;
+            __grow__( rhs.size() );
+            std::uninitialized_copy( rhs.begin(), rhs.end(), begin() );
+          }
+          else {
+            std::copy( rhs.begin(), rhs.begin() + m_size, begin() );
+            std::uninitialized_copy( rhs.begin() + m_size, rhs.end(), begin() + m_size );
+          }
+        }
+        m_size = rhs.size();
+      }
+      return *this;
+    }
+
+    vector& operator=( vector&& rhs ) {
+      if( &rhs != this ) {
+        if( !rhs.__is_stack__() ) {
+          __destroy__( begin(), end() );
+          if( !__is_stack__() ) {
+            m_allocator.deallocate( m_data );
+          }
+          m_data = rhs.m_data;
+          m_size = rhs.m_size;
+          m_capacity = rhs.m_capacity;
+          m_allocator = rhs.m_allocator;
+          rhs.__reset_stack__();
+          rhs.set_size( 0 );
+        }
+        else {
+          if( size() >= rhs.size() ) {
+            auto it = std::move( rhs.begin(), rhs.end(), begin() );
+            __destroy__( it, end() );
+          }
+          else {
+            if( m_capacity < rhs.size() ) {
+              __destroy__( begin(), end() );
+              m_size = 0;
+              __grow__( rhs.size() );
+              std::uninitialized_copy( std::make_move_iterator( rhs.begin() ), std::make_move_iterator( rhs.end() ), begin() );
+            }
+            else {
+              std::move( rhs.begin(), rhs.begin() + m_size, begin() );
+              std::uninitialized_copy( std::make_move_iterator( rhs.begin() + m_size ), std::make_move_iterator( rhs.end() ), begin() );
+            }
+          }
+          rhs.clear();
+          m_size = rhs.size();
+        }
+      }
+      return *this;
+    }
 
     void
     push_back( const T& element ) {
@@ -128,8 +189,7 @@ namespace geometricks {
     void
     reserve( unsigned request ) {
       if( m_capacity < request ) {
-        unsigned next_capacity = __detail__::next_power_of_2( request );
-        __grow__( next_capacity );
+        __grow__( request );
       }
     }
 
@@ -156,6 +216,12 @@ namespace geometricks {
     bool
     empty() const {
       return !m_size;
+    }
+
+    void
+    clear() {
+      __destroy__( begin(), end() );
+      m_size = 0;
     }
 
   protected:
@@ -193,6 +259,11 @@ namespace geometricks {
     }
 
     void
+    __reset_stack__() {
+      m_data = __get_stack_address__();
+    }
+
+    void
     __destroy__( const T* begin, const T* end ) {
       if constexpr( !std::is_trivially_destructible_v<T> ) {
         while( begin != end ) {
@@ -212,19 +283,23 @@ namespace geometricks {
     }
 
     void
-    __grow__( unsigned new_capacity ) {
+    __grow__( unsigned request ) {
+      unsigned new_capacity = __detail__::next_power_of_2( request );
+      new_capacity = std::max( 1u, new_capacity );
       if constexpr( std::is_trivially_copyable_v<T> ) {
         if( __is_stack__() ) {
           T* heap_mem = static_cast<T*>( m_allocator.allocate( sizeof( T ) * new_capacity ) );
-          memcpy( heap_mem, m_data, m_capacity * sizeof( T ) );
+          memcpy( heap_mem, m_data, m_size * sizeof( T ) );
           //No need to free the buffer since it was on the stack.
           //Also, safe to leave memory as is. Trivially copyable types don't need destructor calls.
           m_data = heap_mem;
           m_capacity = new_capacity;
         }
         else {
-          T* new_mem = static_cast<T*>( m_allocator.reallocate( m_data, sizeof( T ) * new_capacity ) );
-          m_data = new_mem;
+          T* heap_mem = static_cast<T*>( m_allocator.allocate( sizeof( T ) * new_capacity ) );
+          memcpy( heap_mem, m_data, m_size * sizeof( T ) );
+          m_allocator.deallocate( m_data );
+          m_data = heap_mem;
           m_capacity = new_capacity;
         }
       }
@@ -242,7 +317,7 @@ namespace geometricks {
   template< typename T, int SBOSize >
   class small_vector : public vector<T> {
 
-    static_assert( SBOSize > 0 );
+    static_assert( SBOSize >= 0 );
 
     union small_element_t {
 
@@ -267,6 +342,24 @@ namespace geometricks {
   public:
 
     small_vector( geometricks::allocator alloc = geometricks::allocator{} ): vector<T>::vector( SBOSize, alloc ) {
+    }
+
+    small_vector( const vector<T>& other, geometricks::allocator alloc = geometricks::allocator{} ): vector<T>::vector( SBOSize, alloc ) {
+      vector<T>::operator=( other );
+    }
+
+    small_vector( vector<T>&& other, geometricks::allocator alloc = geometricks::allocator{} ): vector<T>::vector( SBOSize, alloc ) {
+      vector<T>::operator=( std::move( other ) );
+    }
+
+    small_vector& operator=( const geometricks::vector<T>& other ) {
+      vector<T>::operator=( other );
+      return *this;
+    }
+
+    small_vector& operator=( geometricks::vector<T>&& other ) {
+      vector<T>::operator=( std::move( other ) );
+      return *this;
     }
 
   };

@@ -120,6 +120,20 @@ TEST( TestSmallVector, TestErase ) {
   }
 }
 
+TEST( TestSmallVector, TestCopyAssignment ) {
+  small_vector<int, 0> test{};
+  for( int i = 0; i < 10; ++i ) {
+    test.push_back( i );
+  }
+  small_vector<int, 4> other;
+  other = test;
+  for( int i = 0; i < 10; ++i ) {
+    ++other[ i ];
+    EXPECT_EQ( other[ i ], i + 1 );
+    EXPECT_FALSE( other[ i ] == test[ i ] );
+  }
+}
+
 TEST( TestSmallVector, TestReserve ) {
   small_vector<int, 4> test{};
   EXPECT_TRUE( is_stack( test ) );
