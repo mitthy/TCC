@@ -1,5 +1,5 @@
-#ifndef GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
-#define GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#ifndef GEOMETRICKS_DATA_STRUCTURE_KD_TREE_HPP
+#define GEOMETRICKS_DATA_STRUCTURE_KD_TREE_HPP
 
 //C++ stdlib includes
 #include <functional>
@@ -26,19 +26,17 @@ namespace geometricks {
   * @tparam Compare Function that compares all the different data types stored in each dimension of the data so we can build the tree.
   * If the stored data type T is a std::tuple<int, std::string, float>, the function should be able to compare ( int, int ), ( std::string, std::string ),
   * ( float, float ) so we can work on all different dimensions.
-  * @details This kd tree is stored as an array in memory. This gives better cache locality than node based kd trees.
-  * It also stores the elements in the nodes, not just in the leaves, giving it less flexibility than other types of kd trees.
+  * @details This kd tree is stored as an array in memory. This gives better cache locality than node based kd trees. The elements are stored in the nodes.
   * Since it is extremely hard to balance a kd tree and it hurts performance to build a new one in each element insertion, insertion opperations are not allowed.
-  * @see leaf_kd_tree for a leaf based kd tree.
   * @see geometricks::dimension::dimensional_traits and @ref geometricks::dimension::get_t "geometricks::dimension::get" for a guide on how to use this struct with user defined types.
   * @see https://en.wikipedia.org/wiki/K-d_tree for a quick reference on kd tree.
   * @todo Static assert on compare so we know it can sort in all dimensions.
   * @todo noexcept and constexpr anotations.
-  * @todo Add threshold neighbors to find all elements below threshold distance to efficiently implement collision detection algorithms.
+  * @todo Add threshold neighbors to find all elements below threshold distance to efficiently implement collision detection algorithms. Maybe?
   */
   template< typename T,
             typename Compare = std::less<> >
-  struct array_kd_tree : private Compare {
+  struct kd_tree : private Compare {
 
   private:
 
@@ -67,11 +65,11 @@ namespace geometricks {
     * @todo Supply paper on kd tree construction.
     */
     template< typename InputIterator, typename Sentinel >
-    array_kd_tree( InputIterator begin, Sentinel end, Compare comp = Compare{}, geometricks::allocator alloc = geometricks::allocator{} ): Compare( comp ),
+    kd_tree( InputIterator begin, Sentinel end, Compare comp = Compare{}, geometricks::allocator alloc = geometricks::allocator{} ): Compare( comp ),
                                                                                                                   m_allocator( alloc ),
                                                                                                                   m_size( std::distance( begin, end ) ),
                                                                                                                   m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
-      __construct_array_kd_tree__<0>( begin, end, 0, m_size );
+      __construct_kd_tree__<0>( begin, end, 0, m_size );
     }
 
     /**
@@ -88,11 +86,11 @@ namespace geometricks {
     * @todo Supply paper on kd tree construction.
     */
     template< typename InputIterator, typename Sentinel >
-    array_kd_tree( InputIterator begin, Sentinel end, geometricks::default_compare_t comp, geometricks::allocator alloc = geometricks::allocator{} ):   m_allocator( alloc ),
+    kd_tree( InputIterator begin, Sentinel end, geometricks::default_compare_t comp, geometricks::allocator alloc = geometricks::allocator{} ):   m_allocator( alloc ),
                                                                                                                                       m_size( std::distance( begin, end ) ),
                                                                                                                                       m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
       ( void ) comp; //Silence warnings and errors.
-      __construct_array_kd_tree__<0>( begin, end, 0, m_size );
+      __construct_kd_tree__<0>( begin, end, 0, m_size );
     }
 
     //Copy constructor
@@ -104,7 +102,7 @@ namespace geometricks {
     * @details Performs a deep copy of the right hand side parameter.
     * @note Complexity: @b O(n)
     */
-    array_kd_tree( const array_kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ):   Compare( rhs ),
+    kd_tree( const kd_tree& rhs, geometricks::allocator alloc = geometricks::allocator{} ):   Compare( rhs ),
                                                                                                           m_allocator( alloc ),
                                                                                                           m_size( rhs.m_size ),
                                                                                                           m_data_array( ( T* ) m_allocator.allocate( sizeof( T ) * m_size ) ) {
@@ -120,7 +118,7 @@ namespace geometricks {
     * @details Moves the data from rhs into this.
     * @note Complexity: @b O(1)
     */
-    array_kd_tree( array_kd_tree&& rhs ): Compare( std::move( rhs ) ),
+    kd_tree( kd_tree&& rhs ): Compare( std::move( rhs ) ),
                                           m_allocator( rhs.m_allocator ),
                                           m_size( rhs.m_size ),
                                           m_data_array( rhs.m_data_array ) {
@@ -137,7 +135,7 @@ namespace geometricks {
     * @todo Change this method so we only allocate if the buffer isn't large enough.
     * @todo Maybe we can get the strong exception guarantee here...
     */
-    array_kd_tree& operator=( const array_kd_tree& rhs ) {
+    kd_tree& operator=( const kd_tree& rhs ) {
       if( &rhs != this ) {
         //TODO: optimize to only allocate new buffer in case old capacity wasn't enough.
         //TODO: exception guarantee.
@@ -160,7 +158,7 @@ namespace geometricks {
     * @details Moves the data from rhs into this.
     * @note Complexity: @b O(1)
     */
-    array_kd_tree& operator=( array_kd_tree&& rhs ) {
+    kd_tree& operator=( kd_tree&& rhs ) {
       if( &rhs != this ) {
         Compare::operator=( std::move( rhs ) );
         __destroy__();
@@ -172,7 +170,7 @@ namespace geometricks {
       return *this;
     }
 
-    ~array_kd_tree() {
+    ~kd_tree() {
       __destroy__();
     }
 
@@ -189,7 +187,7 @@ namespace geometricks {
     * @code{.cpp}
     * std::vector<std::tuple<int, int, int>> input_vector;
       ...
-      geometricks::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+      geometricks::kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
       struct manhattan_distance_t {
         template< typename T, int N >
         size_t operator()( const T& lhs, const T& rhs, dimension::dimension_t<N> ) {
@@ -235,7 +233,7 @@ namespace geometricks {
     * @code{.cpp}
     * std::vector<std::tuple<int, int, int>> input_vector;
       ...
-      geometricks::array_kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
+      geometricks::kd_tree<std::tuple<int, int, int>> tree{ input_vector.begin(), input_vector.end() };
       struct manhattan_distance_t {
         template< typename T, int N >
         size_t operator()( const T& lhs, const T& rhs, dimension::dimension_t<N> ) {
@@ -289,7 +287,7 @@ namespace geometricks {
     * @code{.cpp}
     std::vector<std::tuple<int, int, int>> input_vector;
     ...
-    geometricks::array_kd_tree<std::tuple<int, int, int>> tree( input_vector.begin(), input_vector.end() );
+    geometricks::kd_tree<std::tuple<int, int, int>> tree( input_vector.begin(), input_vector.end() );
     auto output_vector = tree.range_search( std::make_tuple( 0, 50, 300 ), std::make_tuple( 57, 51, 500 ) ); //output_vector now contains all points between [0-57, 50-51, 300-500] from tree.
     @endcode
     * @todo Allow the user to input don't care values into the minimum and maximum point. Would need a new data structure for that.
@@ -485,7 +483,7 @@ namespace geometricks {
 
     template< int Dimension, typename InputIterator, typename Sentinel >
     void
-    __construct_array_kd_tree__( InputIterator begin, Sentinel end, int32_t startind_index, int32_t blocksize ) {
+    __construct_kd_tree__( InputIterator begin, Sentinel end, int32_t startind_index, int32_t blocksize ) {
       if( begin != end ) {
         constexpr size_t NextDimension = ( Dimension + 1 ) % DATA_DIMENSIONS;
         auto middle = begin;
@@ -497,9 +495,9 @@ namespace geometricks {
         };
         std::nth_element( begin, middle ,end, less_function );
         new ( &m_data_array[ insert_index ] ) T{ *middle };
-        __construct_array_kd_tree__<NextDimension>( begin, middle, startind_index, step );
+        __construct_kd_tree__<NextDimension>( begin, middle, startind_index, step );
         std::advance( middle, 1 );
-        __construct_array_kd_tree__<NextDimension>( middle, end, insert_index + 1, blocksize - step - 1 );
+        __construct_kd_tree__<NextDimension>( middle, end, insert_index + 1, blocksize - step - 1 );
       }
     }
 
@@ -616,4 +614,4 @@ namespace geometricks {
 
 }
 
-#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_ARRAY_KD_TREE_HPP
+#endif //GEOMETRICKS_DATA_STRUCTURE_MULTIDIMENSIONAL_kd_tree_HPP

@@ -2,7 +2,7 @@
 #include "geometricks/data_structure/internal/free_list.hpp"
 #include <utility>
 
-using free_list_t = geometricks::data_structure::__detail__::__free_list__< int >;
+using free_list_t = geometricks::__detail__::__free_list__< int >;
 
 TEST( TestFreeList, TestPushSingleElement ) {
   free_list_t list{};

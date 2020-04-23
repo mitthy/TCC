@@ -17,7 +17,7 @@ namespace geometricks {
         //First 31 bits are used to store the actual index, while the most significant bit is a flag that is set to 1 whenever this is a childnode
         int32_t m_first_children;
 
-        geometricks::data_structure::rectangle m_bounding_rect;
+        geometricks::rectangle m_bounding_rect;
 
         int16_t m_size;
 

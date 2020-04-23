@@ -1,16 +1,12 @@
 #include "gtest/gtest.h"
-#include "geometricks/data_structure/array_kd_tree.hpp"
+#include "geometricks/data_structure/kd_tree.hpp"
 #include <vector>
 #include <tuple>
 #include <array>
-#include "geometricks/memory/allocator/malloc_allocator.hpp"
-
-template< typename T >
-using kd_tree = geometricks::array_kd_tree<T>;
 
 using namespace geometricks;
 
-TEST( TestArrayKDTree, TestNearestNeighborCorrectness ) {
+TEST( TestKDTree, TestNearestNeighborCorrectness ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -117,7 +113,7 @@ namespace geometricks::dimension {
 
 }
 
-TEST( TestArrayKDTree, TestDataCustomization ) {
+TEST( TestKDTree, TestDataCustomization ) {
   std::vector<dummy::dummy> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( { 50, 50, 50 } );
@@ -139,7 +135,7 @@ TEST( TestArrayKDTree, TestDataCustomization ) {
   }
 }
 
-TEST( TestArrayKDTree, TestRangeSearch ) {
+TEST( TestKDTree, TestRangeSearch ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 30 ) );
@@ -164,7 +160,7 @@ TEST( TestArrayKDTree, TestRangeSearch ) {
   EXPECT_EQ( output_vector.size(), 2u );
 }
 
-TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
+TEST( TestKDTree, TestKNearestNeighborSingleElement ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -224,7 +220,7 @@ TEST( TestArrayKDTree, TestKNearestNeighborSingleElement ) {
   }
 }
 
-TEST( TestArrayKDTree, TestCopyConstructor ) {
+TEST( TestKDTree, TestCopyConstructor ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -253,7 +249,7 @@ TEST( TestArrayKDTree, TestCopyConstructor ) {
   }
 }
 
-TEST( TestArrayKDTree, TestMoveConstructor ) {
+TEST( TestKDTree, TestMoveConstructor ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -280,7 +276,7 @@ TEST( TestArrayKDTree, TestMoveConstructor ) {
   }
 }
 
-TEST( TestArrayKDTree, TestCopyAssignment ) {
+TEST( TestKDTree, TestCopyAssignment ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -313,7 +309,7 @@ TEST( TestArrayKDTree, TestCopyAssignment ) {
   }
 }
 
-TEST( TestArrayKDTree, TestMoveAssignment ) {
+TEST( TestKDTree, TestMoveAssignment ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
@@ -389,7 +385,7 @@ int custom_nearest_neghbor_function::calls_int_int_dim1 = 0;
 int custom_nearest_neghbor_function::calls_int_int_dim2 = 0;
 int custom_nearest_neghbor_function::calls_tuple_int_dim2 = 0;
 
-TEST( TestArrayKDTree, TestNearestNeighborCustomFunction ) {
+TEST( TestKDTree, TestNearestNeighborCustomFunction ) {
   std::vector<std::tuple<int, int, int>> input_vector;
   input_vector.reserve( 10 );
   input_vector.push_back( std::make_tuple( 50, 50, 50 ) );
