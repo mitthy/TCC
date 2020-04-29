@@ -27,7 +27,12 @@ namespace geometricks {
     }
 
     bool insert( const T& element ) {
-      ( void ) element;
+      geometricks::rectangle bounding_rect = geometricks::make_rectangle( element );
+      if( !m_root_rect.contains( bounding_rect ) ) {
+        return false;
+      }
+      auto id = m_elements.push_back( std::make_pair( element, bounding_rect ) );
+      __insert__( m_nodes[ 0 ], m_root_rect, id );
       return true;
     }
 
@@ -73,11 +78,17 @@ namespace geometricks {
 
     geometricks::small_vector<element_t, 0> m_element_ref;
 
-    geometricks::small_vector<T, 0> m_elements;
+    geometricks::small_vector<std::pair<T, geometricks::rectangle>, 0> m_elements;
 
     static node
     __make_leaf__() {
       return node{ EMPTY_LEAF };
+    }
+
+    void __insert__( node& cur_node, const geometricks::rectangle& rect, int32_t id ) {
+      ( void )cur_node;
+      ( void )rect;
+      ( void )id;
     }
 
   };

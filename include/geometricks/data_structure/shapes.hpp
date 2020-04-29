@@ -23,9 +23,9 @@ namespace geometricks {
     rectangle() = default;
 
     constexpr rectangle( int32_t x_left_, int32_t y_top_, int32_t width_, int32_t height_ ):  x_left( x_left_ ),
-                                                                              y_top( y_top_ ),
-                                                                              width( width_ ),
-                                                                              height( height_ ) {}
+                                                                                              y_top( y_top_ ),
+                                                                                              width( width_ ),
+                                                                                              height( height_ ) {}
 
     rectangle( const rectangle& ) = default;
 
@@ -34,6 +34,26 @@ namespace geometricks {
     rectangle& operator=( const rectangle& ) = default;
 
     rectangle& operator=( rectangle&& ) = default;
+
+    int32_t xleft() const {
+      return x_left;
+    }
+
+    int32_t xright() const {
+      return x_left + width;
+    }
+
+    int32_t ytop() const {
+      return y_top;
+    }
+
+    int32_t ybot() const {
+      return y_top + height;
+    }
+
+    bool contains( const rectangle& other ) const {
+      return xleft() <= other.xleft() && xright() >= other.xright() && ytop() <= other.ytop() && ybot() >= other.ybot();
+    }
 
   };
 

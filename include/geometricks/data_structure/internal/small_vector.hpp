@@ -89,7 +89,7 @@ namespace geometricks {
       return *this;
     }
 
-    void
+    size_type
     push_back( const T& element ) {
       if( m_size == ( int )m_capacity ) {
         __grow__( m_capacity * 2 );
@@ -101,6 +101,7 @@ namespace geometricks {
         new ( &m_data[ m_size ] ) T( element );
       }
       ++m_size;
+      return m_size - 1;
     }
 
     void
@@ -307,8 +308,11 @@ namespace geometricks {
         T* new_mem = static_cast<T*>( m_allocator.allocate( sizeof( T ) * new_capacity ) );
         std::uninitialized_copy( std::make_move_iterator( m_data ), std::make_move_iterator( m_data + m_size ), new_mem );
         __destroy__( begin(), end() );
-        m_allocator.deallocate( m_data );
+        if( !__is_stack__() ) {
+          m_allocator.deallocate( m_data );
+        }
         m_data = new_mem;
+        m_capacity = new_capacity;
       }
     }
 
