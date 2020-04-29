@@ -28,7 +28,8 @@ namespace geometricks {
 
     vector() = delete;
 
-    vector& operator=( const vector& rhs ) {
+    vector&
+    operator=( const vector& rhs ) {
       if( &rhs != this ) {
         if( size() >= rhs.size() ) {
           auto it = std::copy( rhs.begin(), rhs.end(), begin() );
@@ -51,7 +52,8 @@ namespace geometricks {
       return *this;
     }
 
-    vector& operator=( vector&& rhs ) {
+    vector&
+    operator=( vector&& rhs ) {
       if( &rhs != this ) {
         if( !rhs.__is_stack__() ) {
           __destroy__( begin(), end() );
@@ -92,7 +94,7 @@ namespace geometricks {
     size_type
     push_back( const T& element ) {
       if( m_size == ( int )m_capacity ) {
-        __grow__( m_capacity * 2 );
+        __grow__( m_capacity + 1 );
       }
       if constexpr( std::is_trivially_copyable_v<T> ) {
         memcpy( ( void* )&m_data[ m_size ], ( void* )&element, sizeof(T) );
@@ -227,7 +229,10 @@ namespace geometricks {
 
   protected:
 
-    vector( int capacity, geometricks::allocator alloc ): m_data( __get_stack_address__() ), m_size( 0 ), m_capacity( capacity ), m_allocator( alloc ) {}
+    vector( int capacity, geometricks::allocator alloc ): m_data( __get_stack_address__() ),
+                                                          m_size( 0 ),
+                                                          m_capacity( capacity ),
+                                                          m_allocator( alloc ) {}
 
   private:
 

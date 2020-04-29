@@ -76,7 +76,6 @@ set( GEOMETRICKS_DATA_STRUCTURE_HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/quad_tree.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/internal/free_list.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/kd_tree.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/internal/static_vector.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure/all.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/geometricks/data_structure.hpp
 )
