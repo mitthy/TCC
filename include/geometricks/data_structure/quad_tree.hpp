@@ -37,19 +37,42 @@ namespace geometricks {
         return false;
       }
       auto id = m_elements.push_back( std::make_pair( element, bounding_rect ) );
-      __insert__( m_nodes[ 0 ], m_root_rect, id, 0 );
+      __insert__( { 0 }, m_root_rect, id, 0 );
       return true;
     }
 
   private:
+
+    struct node_index_t {
+
+      int32_t m_value;
+
+      operator int32_t() const {
+        return m_value;
+      }
+
+    };
+
+    struct element_index_t {
+      int32_t m_value;
+
+      operator int32_t() const {
+        return m_value;
+      }
+
+    };
 
     struct node {
 
       //Indexes values in the quad tree. Last bit is used to represent if the value is a leaf or not.
       struct index_t {
 
-        operator int32_t() const {
-          return ( m_value & 0x7FFFFFFF ) - 1;
+        operator element_index_t() const {
+          return { static_cast<int32_t>( ( m_value & 0x7FFFFFFF ) - 1 ) };
+        }
+
+        operator node_index_t() const {
+          return { static_cast<int32_t>( m_value ) };
         }
 
         uint32_t m_value;
@@ -61,9 +84,14 @@ namespace geometricks {
         return m_first_child.m_value >> 31;
       }
 
-      void
-      set_leaf_element( int32_t leaf_index ) {
+      node& operator=( element_index_t leaf_index ) {
         m_first_child.m_value = 0x80000000 | ( leaf_index + 1 );
+        return *this;
+      }
+
+      node& operator=( node_index_t node_index ) {
+        m_first_child.m_value = node_index;
+        return *this;
       }
 
       index_t m_first_child;
@@ -92,9 +120,9 @@ namespace geometricks {
 
     geometricks::small_vector<node, 1> m_nodes; //Index 0 represents the root.
 
-    geometricks::small_vector<element_t, 0> m_element_ref;
+    geometricks::small_vector<element_t, LEAF_SIZE> m_element_ref;
 
-    geometricks::small_vector<std::pair<T, geometricks::rectangle>, 0> m_elements;
+    geometricks::small_vector<std::pair<T, geometricks::rectangle>, LEAF_SIZE> m_elements;
 
     static node
     __make_leaf__() {
@@ -113,9 +141,9 @@ namespace geometricks {
       auto half_width = rect.width / 2;
       auto half_height = rect.height / 2;
       return { geometricks::rectangle{ rect.x_left, rect.y_top, half_width, half_height },
-               geometricks::rectangle{},
-               geometricks::rectangle{},
-               geometricks::rectangle{}};
+               geometricks::rectangle{ rect.x_left + half_width + 1, rect.y_top, rect.width - half_width - 1, half_height },
+               geometricks::rectangle{ rect.x_left, rect.y_top + half_height + 1, half_width, rect.height - half_height - 1 },
+               geometricks::rectangle{ rect.x_left + half_width + 1, rect.y_top + half_height + 1, rect.width - half_width - 1, rect.height - half_height - 1 } };
     }
 
     int
@@ -130,38 +158,66 @@ namespace geometricks {
 
     //TODO
     void
-    __split_node__( node& cur_node, const geometricks::rectangle& rect ) {
+    __split_node__( node_index_t cur_node, const geometricks::rectangle& rect, int depth ) {
       //Create 4 new nodes. Edit small vector class to allow insertion of more than 1 object at a time.
-      ( void )cur_node;
-      ( void )rect;
+      auto [ first, second, third, fourth ] = __split_rect__( rect );
+      element_index_t first_child = m_nodes[ cur_node ].m_first_child;
+      int32_t index = first_child;
+      node_index_t first_node = { m_nodes.push_back( __make_leaf__() ) };
+      m_nodes.push_back( __make_leaf__() );
+      m_nodes.push_back( __make_leaf__() );
+      m_nodes.push_back( __make_leaf__() );
+      assert( m_nodes[ cur_node ].is_leaf() );
+      m_nodes[ cur_node ] = first_node;
+      assert( !m_nodes[ cur_node ].is_leaf() );
+      while( index != -1 ) {
+        auto actual_id = m_element_ref[ index ].id;
+        geometricks::rectangle element_rect = m_elements[ actual_id ].second;
+        if( geometricks::intersects_with( first, element_rect ) ) {;
+          __insert__( first_node, first, actual_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( second, element_rect ) ) {
+          __insert__( { first_node + 1 }, second, actual_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( third, element_rect ) ) {
+          __insert__( { first_node + 2 }, third, actual_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( fourth, element_rect ) ) {
+          __insert__( { first_node + 3 }, fourth, actual_id, depth + 1 );
+        }
+        index = m_element_ref[ index ].next;
+      }
     }
 
     void
-    __insert__( node& cur_node, const geometricks::rectangle& rect, int32_t object_id, int depth ) {
-      ( void )object_id;
-      if( !cur_node.is_leaf() ) {
+    __insert__( node_index_t cur_node, const geometricks::rectangle& rect, int32_t object_id, int depth ) {
+      if( !m_nodes[ cur_node ].is_leaf() ) {
         auto [ first, second, third, fourth ] = __split_rect__( rect );
-        std::cout << first << "\n";
-        std::cout << second << "\n";
-        std::cout << third << "\n";
-        std::cout << fourth << "\n";
-        //TODO
+        node_index_t first_node_child = m_nodes[ cur_node ].m_first_child;
+        if( geometricks::intersects_with( first, m_elements[ object_id ].second ) ) {
+          __insert__( first_node_child, first, object_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( second, m_elements[ object_id ].second ) ) {
+          __insert__( { first_node_child + 1 }, second, object_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( third, m_elements[ object_id ].second ) ) {
+          __insert__( { first_node_child + 2 }, third, object_id, depth + 1 );
+        }
+        if( geometricks::intersects_with( fourth, m_elements[ object_id ].second ) ) {
+          __insert__( { first_node_child + 3 }, fourth, object_id, depth + 1 );
+        }
       }
       else {
-        int32_t last_element_index = cur_node.m_first_child;
-        if( depth == MAX_DEPTH ) {
-          //TODO
-        }
-        else {
-          auto count = __count_leaf_objects__( last_element_index );
-          if( count == LEAF_SIZE ) {
-            __split_node__( cur_node, rect );
-            //TODO
-          }
-          else {
-            element_t new_el{ object_id, last_element_index };
-            auto element_id = m_element_ref.push_back( new_el );
-            cur_node.set_leaf_element( element_id );
+        element_index_t last_element_index = m_nodes[ cur_node ].m_first_child;
+        element_t new_el{ object_id, last_element_index };
+        element_index_t element_id = { m_element_ref.push_back( new_el ) };
+        m_nodes[ cur_node ] = element_id;
+        if( !( depth == MAX_DEPTH || rect.height < 3 || rect.width < 3 ) ) {
+          auto count = __count_leaf_objects__( element_id );
+          if( count > LEAF_SIZE ) {
+            assert( m_nodes[ cur_node ].is_leaf() );
+            __split_node__( cur_node, rect, depth );
+            assert( !m_nodes[ cur_node ].is_leaf() );
           }
         }
       }
